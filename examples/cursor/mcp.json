@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "spm": {
+      "url": "https://getspm.com/v1/mcp",
+      "headers": {
+        "Authorization": "Bearer ${SPM_MCP_TOKEN}"
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "personal",
+  "interface": {
+    "displayName": "Personal"
+  },
+  "plugins": [
+      {
+        "name": "spm-codex",
+        "source": {
+          "source": "local",
+          "path": "./plugins/spm-codex"
+        },
+        "policy": {
+          "installation": "AVAILABLE",
+          "authentication": "ON_INSTALL"
+        },
+        "category": "Developer Tools",
+        "description": "Connect Codex to SPM project memory through the hosted remote MCP endpoint."
+      }
+  ]
+}
