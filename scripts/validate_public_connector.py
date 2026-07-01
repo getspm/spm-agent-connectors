@@ -19,6 +19,7 @@ REQUIRED_FILES = [
     ROOT / "plugins" / "spm-codex" / ".mcp.json",
     ROOT / "plugins" / "spm-codex" / "scripts" / "auth_spm_codex.py",
     ROOT / "plugins" / "spm-codex" / "scripts" / "doctor_spm_codex.py",
+    ROOT / "plugins" / "spm-codex" / "scripts" / "smoke_spm_remote_mcp.py",
     ROOT / "docs" / "security-boundary.md",
     ROOT / "docs" / "publishing.md",
 ]
@@ -58,11 +59,11 @@ def fail(message: str) -> None:
 def iter_text_files() -> list[Path]:
     files: list[Path] = []
     for path in ROOT.rglob("*"):
-        if path.is_dir() or ".git" in path.parts:
+        if path.is_dir() or ".git" in path.parts or "__pycache__" in path.parts:
             continue
         if path == Path(__file__).resolve():
             continue
-        if path.suffix.lower() in {".png", ".jpg", ".jpeg", ".gif", ".mp4", ".mov"}:
+        if path.suffix.lower() in {".png", ".jpg", ".jpeg", ".gif", ".mp4", ".mov", ".pyc"}:
             continue
         files.append(path)
     return files

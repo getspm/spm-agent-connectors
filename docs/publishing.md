@@ -21,6 +21,22 @@ https://getspm.com/v1/mcp
 - Project-scoped.
 - Trial or paid plan required.
 
+## Verification Gate
+
+Before submitting or updating a directory listing, run:
+
+```bash
+python3 scripts/validate_public_connector.py
+python3 plugins/spm-codex/scripts/doctor_spm_codex.py --metadata-only
+python3 plugins/spm-codex/scripts/smoke_spm_remote_mcp.py
+```
+
+The first command verifies that this public repository remains connector-only.
+The second checks public MCP discovery metadata without credentials. The third
+requires a project-scoped `SPM_CODEX_MCP_TOKEN` and exercises real agent-facing
+MCP calls: temporal state, context pack, verification, graph query, preflight
+and post-action report.
+
 ## Suggested Tags
 
 - mcp

@@ -79,6 +79,25 @@ Verify:
 python3 plugins/spm-codex/scripts/doctor_spm_codex.py
 ```
 
+Run the functional remote MCP smoke:
+
+```bash
+python3 plugins/spm-codex/scripts/smoke_spm_remote_mcp.py
+```
+
+The smoke uses the same `SPM_CODEX_MCP_TOKEN` as Codex. It initializes the
+hosted MCP endpoint, verifies the exposed tool surface, creates a small
+project-scoped smoke memory event, reads temporal state, creates and verifies a
+context pack, queries the context graph, runs agent preflight and reports
+post-action evidence. It never prints the token and the hosted connector strips
+raw event bodies from returned context.
+
+For a non-mutating token check, use:
+
+```bash
+python3 plugins/spm-codex/scripts/smoke_spm_remote_mcp.py --read-only
+```
+
 ## Other MCP Clients
 
 Use the same endpoint with a project-scoped bearer token. See:

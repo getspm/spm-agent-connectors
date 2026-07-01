@@ -41,6 +41,17 @@ python3 plugins/spm-codex/scripts/doctor_spm_codex.py
 
 The doctor checks the public MCP metadata, confirms the token is present without printing it, initializes the hosted MCP endpoint and verifies that the required project-memory tools are exposed.
 
+Then run the functional smoke:
+
+```bash
+python3 plugins/spm-codex/scripts/smoke_spm_remote_mcp.py
+```
+
+The smoke performs real authenticated MCP tool calls with the same token Codex
+will use: temporal memory write/read, context-pack generation, context-pack
+verification, graph query, agent preflight and post-action report. Use
+`--read-only` for a non-mutating connector check.
+
 ## Security Boundary
 
 The hosted connector is project-scoped. It does not expose SPM billing, checkout, invoice payment, customer portal creation or destructive admin tools to Codex. Use read-write tokens only for trusted agent sessions that may record temporal events or post-action evidence.
