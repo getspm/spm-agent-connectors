@@ -27,6 +27,18 @@ https://getspm.com/agents
 https://getspm.com/v1/mcp
 ```
 
+Official MCP Registry descriptor:
+
+```text
+server.json
+```
+
+Registry name:
+
+```text
+io.github.getspm/spm
+```
+
 ## Authentication
 
 - Bearer token.
@@ -41,6 +53,9 @@ Use the remote connector path first:
 - Submit `https://getspm.com/v1/mcp` as the public HTTPS MCP endpoint.
 - Use `https://getspm.com/agents` as the human inspection and setup URL.
 - Use `https://github.com/getspm/spm-agent-connectors` as the public connector repository.
+- Publish `server.json` to the Official MCP Registry before relying on
+  PulseMCP ingestion, because PulseMCP imports MCP server listings from that
+  registry.
 - Do not provide a private SPM project token to public scanners unless a
   temporary review token has been explicitly approved, scoped and scheduled for
   revocation.
@@ -53,15 +68,17 @@ Before submitting or updating a directory listing, run:
 
 ```bash
 python3 scripts/validate_public_connector.py
+mcp-publisher validate server.json
 python3 plugins/spm-codex/scripts/doctor_spm_codex.py --metadata-only
 python3 plugins/spm-codex/scripts/smoke_spm_remote_mcp.py
 ```
 
 The first command verifies that this public repository remains connector-only.
-The second checks public MCP discovery metadata without credentials. The third
-requires a project-scoped `SPM_CODEX_MCP_TOKEN` and exercises real agent-facing
-MCP calls: temporal state, context pack, verification, graph query, preflight
-and post-action report.
+The second validates the Official MCP Registry descriptor. The third checks
+public MCP discovery metadata without credentials. The fourth requires a
+project-scoped `SPM_CODEX_MCP_TOKEN` and exercises real agent-facing MCP calls:
+temporal state, context pack, verification, graph query, preflight and
+post-action report.
 
 ## Suggested Tags
 

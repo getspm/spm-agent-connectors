@@ -22,6 +22,18 @@ https://getspm.com/agents
 https://getspm.com/v1/mcp
 ```
 
+Official MCP Registry descriptor:
+
+```text
+server.json
+```
+
+Registry name:
+
+```text
+io.github.getspm/spm
+```
+
 The endpoint is public for discovery, but authenticated for use. A client needs:
 
 - an SPM account;

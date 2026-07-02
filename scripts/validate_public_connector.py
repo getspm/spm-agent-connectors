@@ -14,6 +14,7 @@ REQUIRED_FILES = [
     ROOT / "README.md",
     ROOT / "SECURITY.md",
     ROOT / "LICENSE",
+    ROOT / "server.json",
     ROOT / "directory-listing.json",
     ROOT / ".agents" / "plugins" / "marketplace.json",
     ROOT / "plugins" / "spm-codex" / ".codex-plugin" / "plugin.json",
@@ -87,6 +88,7 @@ def main() -> int:
     plugin = json.loads((ROOT / "plugins" / "spm-codex" / ".codex-plugin" / "plugin.json").read_text())
     mcp = json.loads((ROOT / "plugins" / "spm-codex" / ".mcp.json").read_text())
     listing = json.loads((ROOT / "directory-listing.json").read_text())
+    server = json.loads((ROOT / "server.json").read_text())
 
     assert marketplace["plugins"][0]["source"]["path"] == "./plugins/spm-codex"
     assert plugin["name"] == "spm-codex"
@@ -101,6 +103,23 @@ def main() -> int:
     assert listing["authentication"]["token_scope"] == "project"
     assert "checkout" in listing["excluded_connector_surfaces"]
     assert len(listing["capabilities"]) >= 8
+    assert server["name"] == "io.github.getspm/spm"
+    assert server["title"] == "SPM - Structured Project Memory"
+    assert server["websiteUrl"] == "https://getspm.com"
+    assert server["repository"]["url"] == "https://github.com/getspm/spm-agent-connectors"
+    assert server["repository"]["source"] == "github"
+    assert server["version"] == "0.1.1"
+    assert "packages" not in server
+    assert server["remotes"][0]["type"] == "streamable-http"
+    assert server["remotes"][0]["url"] == "https://getspm.com/v1/mcp"
+    authorization_header = server["remotes"][0]["headers"][0]
+    assert authorization_header["name"] == "Authorization"
+    assert authorization_header["isRequired"] is True
+    assert authorization_header["isSecret"] is True
+    publisher_meta = server["_meta"]["io.modelcontextprotocol.registry/publisher-provided"]
+    assert publisher_meta["agentIntegrationGuide"] == "https://getspm.com/agents"
+    assert "billing" in publisher_meta["excludedConnectorSurfaces"]
+    assert "smart_project_memory" in publisher_meta["capabilities"]
 
     for path in iter_text_files():
         text = path.read_text(encoding="utf-8", errors="ignore")
