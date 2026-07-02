@@ -12,6 +12,12 @@ infrastructure are not included in this repository.
 
 ## Hosted MCP Endpoint
 
+Human setup and inspection guide:
+
+```text
+https://getspm.com/agents
+```
+
 ```text
 https://getspm.com/v1/mcp
 ```
@@ -117,6 +123,7 @@ See `SECURITY.md` and `docs/security-boundary.md`.
 ## Links
 
 - Website: https://getspm.com
+- Agent integration guide: https://getspm.com/agents
 - MCP setup: https://getspm.com/mcp
 - Docs: https://getspm.com/docs
 - Security: https://getspm.com/security

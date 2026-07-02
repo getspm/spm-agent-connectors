@@ -10,6 +10,12 @@ context for AI agents.
 
 ## Endpoint
 
+Human setup and inspection guide:
+
+```text
+https://getspm.com/agents
+```
+
 ```text
 https://getspm.com/v1/mcp
 ```
@@ -53,6 +59,7 @@ and post-action report.
 ## Links
 
 - Website: https://getspm.com
+- Agent integration guide: https://getspm.com/agents
 - Setup: https://getspm.com/mcp
 - Docs: https://getspm.com/docs
 - Security: https://getspm.com/security
