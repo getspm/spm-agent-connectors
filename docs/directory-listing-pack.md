@@ -78,7 +78,7 @@ Use this order when a directory allows bullets or feature fields:
 - Agent integration guide: https://getspm.com/agents
 - Remote MCP endpoint: https://getspm.com/v1/mcp
 - Official MCP Registry descriptor: server.json
-- Official MCP Registry name: io.github.getspm/spm
+- Official MCP Registry name: com.getspm/spm
 - Static MCP server card: https://getspm.com/.well-known/mcp/server-card.json
 - MCP setup: https://getspm.com/mcp
 - Public docs: https://getspm.com/docs

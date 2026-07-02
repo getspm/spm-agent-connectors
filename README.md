@@ -31,7 +31,7 @@ server.json
 Registry name:
 
 ```text
-io.github.getspm/spm
+com.getspm/spm
 ```
 
 The endpoint is public for discovery, but authenticated for use. A client needs:

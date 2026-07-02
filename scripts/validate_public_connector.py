@@ -103,7 +103,7 @@ def main() -> int:
     assert listing["authentication"]["token_scope"] == "project"
     assert "checkout" in listing["excluded_connector_surfaces"]
     assert len(listing["capabilities"]) >= 8
-    assert server["name"] == "io.github.getspm/spm"
+    assert server["name"] == "com.getspm/spm"
     assert server["title"] == "SPM - Structured Project Memory"
     assert server["websiteUrl"] == "https://getspm.com"
     assert server["repository"]["url"] == "https://github.com/getspm/spm-agent-connectors"

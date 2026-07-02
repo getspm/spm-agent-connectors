@@ -1,6 +1,6 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.getspm/spm",
+  "name": "com.getspm/spm",
   "title": "SPM - Structured Project Memory",
   "description": "Structured project memory for AI agents, delivered through a project-scoped remote MCP connector.",
   "websiteUrl": "https://getspm.com",

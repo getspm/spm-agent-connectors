@@ -36,7 +36,7 @@ server.json
 Registry name:
 
 ```text
-io.github.getspm/spm
+com.getspm/spm
 ```
 
 ## Authentication
