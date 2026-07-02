@@ -5,8 +5,15 @@ catalogs.
 
 ## Public Listing Text
 
-SPM turns project knowledge into scoped, temporal, verifiable and injectable
-context for AI agents.
+Use `docs/directory-listing-pack.md` as the canonical public copy source. It is
+written for external MCP directory reviewers, integration partners and agent
+builders.
+
+Short listing text:
+
+```text
+SPM turns project knowledge into verified context that agents can query, inject, share and trust.
+```
 
 ## Endpoint
 
@@ -26,6 +33,19 @@ https://getspm.com/v1/mcp
 - Token generated or approved in SPM.
 - Project-scoped.
 - Trial or paid plan required.
+
+## Directory Strategy
+
+Use the remote connector path first:
+
+- Submit `https://getspm.com/v1/mcp` as the public HTTPS MCP endpoint.
+- Use `https://getspm.com/agents` as the human inspection and setup URL.
+- Use `https://github.com/getspm/spm-agent-connectors` as the public connector repository.
+- Do not provide a private SPM project token to public scanners unless a
+  temporary review token has been explicitly approved, scoped and scheduled for
+  revocation.
+- If a directory cannot scan authenticated tools, point it to the static server
+  card at `https://getspm.com/.well-known/mcp/server-card.json`.
 
 ## Verification Gate
 
@@ -64,3 +84,5 @@ and post-action report.
 - Docs: https://getspm.com/docs
 - Security: https://getspm.com/security
 - Demo: https://getspm.com/sales/spm-current-scoped-trusted-agent-memory.mp4
+- Public connector repository: https://github.com/getspm/spm-agent-connectors
+- Public connector release: https://github.com/getspm/spm-agent-connectors/releases/tag/v0.1.0

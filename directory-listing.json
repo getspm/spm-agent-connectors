@@ -1,0 +1,63 @@
+{
+  "name": "SPM",
+  "display_name": "SPM - Structured Project Memory",
+  "one_line_description": "Structured project memory for AI agents, delivered through a project-scoped remote MCP connector.",
+  "short_description": "SPM gives agents smart, temporal and verifiable project context through MCP, with scoped context packs, source traceability, access control and post-action evidence.",
+  "positioning": "SPM turns project knowledge into verified context that agents can query, inject, share and trust.",
+  "remote_mcp_endpoint": "https://getspm.com/v1/mcp",
+  "agent_integration_guide": "https://getspm.com/agents",
+  "static_server_card": "https://getspm.com/.well-known/mcp/server-card.json",
+  "homepage": "https://getspm.com",
+  "documentation": "https://getspm.com/docs",
+  "security": "https://getspm.com/security",
+  "demo_video": "https://getspm.com/sales/spm-current-scoped-trusted-agent-memory.mp4",
+  "repository": "https://github.com/getspm/spm-agent-connectors",
+  "release": "https://github.com/getspm/spm-agent-connectors/releases/tag/v0.1.0",
+  "authentication": {
+    "required": true,
+    "scheme": "bearer",
+    "token_scope": "project",
+    "token_source": "SPM MCP setup console or browser-approved device flow"
+  },
+  "capabilities": [
+    "Smart project memory that structures, summarizes, tags and relates project knowledge.",
+    "Temporal memory across original intent, working state, current truth and history.",
+    "Queryable context graphs, source traceability and item-level recall.",
+    "Scoped context packs for different agents, teams, partners or support flows.",
+    "MCP, CLI and API injection into agent workflows.",
+    "Access control, permissions, expirations, revocation and audit logs.",
+    "Provenance, hashes and verification for the context an agent receives.",
+    "Policy and hardening checks before consequential agent actions."
+  ],
+  "excluded_connector_surfaces": [
+    "billing",
+    "checkout",
+    "invoice_payment",
+    "customer_portal",
+    "destructive_tenant_administration",
+    "raw_secret_return",
+    "cross_project_access_without_explicit_project_token"
+  ],
+  "categories": [
+    "Developer Tools",
+    "Coding Agents",
+    "AI & Machine Learning",
+    "RAG Systems",
+    "Project Management",
+    "Security"
+  ],
+  "tags": [
+    "mcp",
+    "agents",
+    "project-memory",
+    "agent-memory",
+    "context-packs",
+    "temporal-memory",
+    "context-graph",
+    "provenance",
+    "verification",
+    "access-control",
+    "agent-governance",
+    "developer-tools"
+  ]
+}

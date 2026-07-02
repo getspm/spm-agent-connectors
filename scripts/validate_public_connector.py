@@ -14,6 +14,7 @@ REQUIRED_FILES = [
     ROOT / "README.md",
     ROOT / "SECURITY.md",
     ROOT / "LICENSE",
+    ROOT / "directory-listing.json",
     ROOT / ".agents" / "plugins" / "marketplace.json",
     ROOT / "plugins" / "spm-codex" / ".codex-plugin" / "plugin.json",
     ROOT / "plugins" / "spm-codex" / ".mcp.json",
@@ -22,6 +23,7 @@ REQUIRED_FILES = [
     ROOT / "plugins" / "spm-codex" / "scripts" / "smoke_spm_remote_mcp.py",
     ROOT / "docs" / "security-boundary.md",
     ROOT / "docs" / "publishing.md",
+    ROOT / "docs" / "directory-listing-pack.md",
 ]
 
 BANNED_TOP_LEVEL = {
@@ -84,12 +86,21 @@ def main() -> int:
     marketplace = json.loads((ROOT / ".agents" / "plugins" / "marketplace.json").read_text())
     plugin = json.loads((ROOT / "plugins" / "spm-codex" / ".codex-plugin" / "plugin.json").read_text())
     mcp = json.loads((ROOT / "plugins" / "spm-codex" / ".mcp.json").read_text())
+    listing = json.loads((ROOT / "directory-listing.json").read_text())
 
     assert marketplace["plugins"][0]["source"]["path"] == "./plugins/spm-codex"
     assert plugin["name"] == "spm-codex"
     assert plugin["mcpServers"] == "./.mcp.json"
     assert mcp["mcpServers"]["spm"]["url"] == "https://getspm.com/v1/mcp"
     assert mcp["mcpServers"]["spm"]["bearer_token_env_var"] == "SPM_CODEX_MCP_TOKEN"
+    assert listing["remote_mcp_endpoint"] == "https://getspm.com/v1/mcp"
+    assert listing["static_server_card"] == "https://getspm.com/.well-known/mcp/server-card.json"
+    assert listing["repository"] == "https://github.com/getspm/spm-agent-connectors"
+    assert listing["authentication"]["required"] is True
+    assert listing["authentication"]["scheme"] == "bearer"
+    assert listing["authentication"]["token_scope"] == "project"
+    assert "checkout" in listing["excluded_connector_surfaces"]
+    assert len(listing["capabilities"]) >= 8
 
     for path in iter_text_files():
         text = path.read_text(encoding="utf-8", errors="ignore")

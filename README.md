@@ -128,3 +128,4 @@ See `SECURITY.md` and `docs/security-boundary.md`.
 - Docs: https://getspm.com/docs
 - Security: https://getspm.com/security
 - Demo: https://getspm.com/sales/spm-current-scoped-trusted-agent-memory.mp4
+- Directory listing pack: docs/directory-listing-pack.md
