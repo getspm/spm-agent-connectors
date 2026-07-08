@@ -1,9 +1,9 @@
 {
   "name": "SPM",
   "display_name": "SPM - Structured Project Memory",
-  "one_line_description": "Structured project memory for AI agents, delivered through a project-scoped remote MCP connector.",
-  "short_description": "SPM gives agents smart, temporal and verifiable project context through MCP, with scoped context packs, source traceability, access control and post-action evidence.",
-  "positioning": "SPM turns project knowledge into verified context that agents can query, inject, share and trust.",
+  "one_line_description": "Durable, shareable and governed project memory for AI agents, delivered through a project-scoped remote MCP connector.",
+  "short_description": "SPM gives agents memory they can actually use: relevant requirements, current decisions, completed work, source-backed context, temporal signals and governed sharing boundaries.",
+  "positioning": "SPM turns project knowledge into durable, shareable, governed and internally smart memory that agents can query, verify and use safely.",
   "remote_mcp_endpoint": "https://getspm.com/v1/mcp",
   "agent_integration_guide": "https://getspm.com/agents",
   "static_server_card": "https://getspm.com/.well-known/mcp/server-card.json",
@@ -24,7 +24,7 @@
     "Temporal memory across original intent, working state, current truth and history.",
     "Queryable context graphs, source traceability and item-level recall.",
     "Scoped context packs for different agents, teams, partners or support flows.",
-    "MCP, CLI and API injection into agent workflows.",
+    "MCP, CLI and API use inside agent workflows.",
     "Access control, permissions, expirations, revocation and audit logs.",
     "Provenance, hashes and verification for the context an agent receives.",
     "Policy and hardening checks before consequential agent actions."

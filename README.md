@@ -2,10 +2,10 @@
 
 Public connector package for SPM - Structured Project Memory.
 
-SPM turns project knowledge into scoped, temporal, verifiable and injectable
-context for AI agents. This repository contains only the public connector
-surface: MCP configuration, Codex plugin metadata, setup scripts, examples and
-security guidance.
+SPM turns project knowledge into durable, shareable, governed and internally
+smart project memory for AI agents. This repository contains only the public
+connector surface: MCP configuration, Codex plugin metadata, setup scripts,
+examples and security guidance.
 
 The SPM application, backend, billing system, private console, memory engine and
 infrastructure are not included in this repository.
@@ -45,12 +45,27 @@ The endpoint is public for discovery, but authenticated for use. A client needs:
 
 Connector profiles expose the agent-facing SPM surface:
 
+- use durable project memory across chats, runs and tools;
+- work with smart memory packs that preserve requirements, current decisions,
+  completed work, source-backed context and temporal signals;
 - query temporal project memory;
 - request scoped context packs;
 - verify context pack provenance and hashes;
 - query context graphs and boundaries;
 - run policy-aware preflight checks;
 - report completed actions, tests, evidence and decisions.
+
+## Typical Use Cases
+
+- Coding agents receive the project memory they should actually use before
+  changing code: requirements, current decisions, tests, constraints and
+  completed work.
+- Delivery teams turn scattered project knowledge into scoped packs for
+  engineers, clients, partners or support without exposing the whole project.
+- Partners or external collaborators receive bounded memory with source,
+  expiry, revocation, provenance and audit evidence.
+- Agent workflows preserve memory after the task by reporting decisions, tests
+  and evidence back to SPM.
 
 ## What Agents Cannot Do
 

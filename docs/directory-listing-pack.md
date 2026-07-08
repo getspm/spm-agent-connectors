@@ -7,30 +7,31 @@ memory plugin.
 
 ## Primary Positioning
 
-SPM turns project knowledge into verified context that agents can query, inject,
-share and trust.
+SPM turns project knowledge into durable, shareable, governed and internally
+smart memory that agents can query, verify and use safely.
 
 ## One-Line Description
 
-Structured project memory for AI agents, delivered through a project-scoped
-remote MCP connector.
+Durable, shareable and governed project memory for AI agents, delivered through
+a project-scoped remote MCP connector.
 
 ## Short Description
 
-SPM gives agents smart, temporal and verifiable project context through MCP,
-with scoped context packs, source traceability, access control and post-action
-evidence.
+SPM gives agents memory they can actually use: relevant requirements, current
+decisions, completed work, source-backed context, temporal signals and governed
+sharing boundaries.
 
 ## Long Description
 
 SPM is project memory infrastructure for AI agents and technical teams. It
-structures project knowledge into temporal memory, context graphs and
-hash-verifiable context packs that can be injected into Codex, Cursor, Claude,
+structures project knowledge into durable temporal memory, context graphs and
+hash-verifiable context packs that can be used by Codex, Cursor, Claude,
 custom runtimes and other MCP-capable agents.
 
-Agents can retrieve the right project context for a task, verify what they
-received, run policy-aware preflight checks before consequential actions and
-report completed work back to project memory with tests, decisions and evidence.
+Agents can receive the project memory they should actually use for a task,
+verify what they received, run policy-aware preflight checks before
+consequential actions and report completed work back to project memory with
+tests, decisions and evidence.
 Teams can scope context for different agents, collaborators, partners or support
 flows without exposing billing, checkout, destructive administration or raw
 secrets through the connector.
@@ -43,7 +44,7 @@ Use this order when a directory allows bullets or feature fields:
 2. Temporal memory across original intent, working state, current truth and history.
 3. Queryable context graphs, source traceability and item-level recall.
 4. Scoped context packs for different agents, teams, partners or support flows.
-5. MCP, CLI and API injection into agent workflows.
+5. MCP, CLI and API use inside agent workflows.
 6. Access control, permissions, expirations, revocation and audit logs.
 7. Provenance, hashes and verification for the context an agent receives.
 8. Policy and hardening checks before consequential agent actions.
@@ -116,7 +117,7 @@ https://getspm.com
 Description:
 
 ```text
-SPM turns project knowledge into verified context that agents can query, inject, share and trust. The connector exposes smart project memory, temporal state, context packs, graph query, preflight checks and post-action evidence through a project-scoped remote MCP endpoint.
+SPM turns project knowledge into durable, shareable, governed and internally smart memory that agents can query, verify and use safely. The connector exposes smart project memory, temporal state, context packs, graph query, preflight checks and post-action evidence through a project-scoped remote MCP endpoint.
 ```
 
 Authentication note:
