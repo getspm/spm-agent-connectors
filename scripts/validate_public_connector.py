@@ -22,6 +22,11 @@ REQUIRED_FILES = [
     ROOT / "plugins" / "spm-codex" / "scripts" / "auth_spm_codex.py",
     ROOT / "plugins" / "spm-codex" / "scripts" / "doctor_spm_codex.py",
     ROOT / "plugins" / "spm-codex" / "scripts" / "smoke_spm_remote_mcp.py",
+    ROOT / "plugins" / "spm-claude" / ".claude-plugin" / "plugin.json",
+    ROOT / "plugins" / "spm-cursor" / ".cursor-plugin" / "plugin.json",
+    ROOT / "plugins" / "spm-openclaw" / "hooks" / "spm-memory" / "handler.js",
+    ROOT / "scripts" / "agent-connectors" / "authorize_spm_agent.py",
+    ROOT / "scripts" / "agent-connectors" / "spm-agent-lifecycle.py",
     ROOT / "docs" / "security-boundary.md",
     ROOT / "docs" / "publishing.md",
     ROOT / "docs" / "directory-listing-pack.md",
@@ -100,7 +105,7 @@ def main() -> int:
     assert listing["repository"] == "https://github.com/getspm/spm-agent-connectors"
     assert listing["authentication"]["required"] is True
     assert listing["authentication"]["scheme"] == "bearer"
-    assert listing["authentication"]["token_scope"] == "project"
+    assert listing["authentication"]["token_scope"] == "project, project_set or organization"
     assert "checkout" in listing["excluded_connector_surfaces"]
     assert len(listing["capabilities"]) >= 8
     assert server["name"] == "com.getspm/spm"
@@ -108,7 +113,7 @@ def main() -> int:
     assert server["websiteUrl"] == "https://getspm.com"
     assert server["repository"]["url"] == "https://github.com/getspm/spm-agent-connectors"
     assert server["repository"]["source"] == "github"
-    assert server["version"] == "0.1.1"
+    assert server["version"] == "0.2.0"
     assert "packages" not in server
     assert server["remotes"][0]["type"] == "streamable-http"
     assert server["remotes"][0]["url"] == "https://getspm.com/v1/mcp"
@@ -120,6 +125,8 @@ def main() -> int:
     assert publisher_meta["agentIntegrationGuide"] == "https://getspm.com/agents"
     assert "billing" in publisher_meta["excludedConnectorSurfaces"]
     assert "smart_project_memory" in publisher_meta["capabilities"]
+    assert "explicit_multi_project_composition" in publisher_meta["capabilities"]
+    assert "agent_lifecycle_triage" in publisher_meta["capabilities"]
 
     for path in iter_text_files():
         text = path.read_text(encoding="utf-8", errors="ignore")

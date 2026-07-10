@@ -1,0 +1,10 @@
+{
+  "name": "spm-cursor",
+  "version": "0.1.0",
+  "description": "Governed project memory and context composition for Cursor through SPM.",
+  "author": {
+    "name": "Manna Digital Consulting, S.L.",
+    "url": "https://getspm.com"
+  },
+  "homepage": "https://getspm.com"
+}

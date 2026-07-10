@@ -12,8 +12,8 @@ smart memory that agents can query, verify and use safely.
 
 ## One-Line Description
 
-Durable, shareable and governed project memory for AI agents, delivered through
-a project-scoped remote MCP connector.
+Durable, shareable, governed and internally smart project memory for AI agents
+across projects, tools and teams.
 
 ## Short Description
 
@@ -27,6 +27,11 @@ SPM is project memory infrastructure for AI agents and technical teams. It
 structures project knowledge into durable temporal memory, context graphs and
 hash-verifiable context packs that can be used by Codex, Cursor, Claude,
 custom runtimes and other MCP-capable agents.
+
+Lifecycle-aware clients can submit agent turns to SPM's LLM-first triage. SPM
+resolves one active project for the conversation and prevents accidental
+mixing, while users with permission can explicitly query or compose context
+from another project or a live external project mount.
 
 Agents can receive the project memory they should actually use for a task,
 verify what they received, run policy-aware preflight checks before
@@ -48,6 +53,9 @@ Use this order when a directory allows bullets or feature fields:
 6. Access control, permissions, expirations, revocation and audit logs.
 7. Provenance, hashes and verification for the context an agent receives.
 8. Policy and hardening checks before consequential agent actions.
+9. Automatic active-project resolution without silent project mixing.
+10. Explicit multi-project composition and live federated project mounts.
+11. Agent lifecycle capture with LLM-first memory triage and provenance.
 
 ## Suggested Categories
 
@@ -86,7 +94,7 @@ Use this order when a directory allows bullets or feature fields:
 - Security: https://getspm.com/security
 - Demo video: https://getspm.com/sales/spm-current-scoped-trusted-agent-memory.mp4
 - Public connector repository: https://github.com/getspm/spm-agent-connectors
-- Public connector release: https://github.com/getspm/spm-agent-connectors/releases/tag/v0.1.1
+- Public connector release: https://github.com/getspm/spm-agent-connectors/releases/tag/v0.2.0
 
 ## Smithery Fields
 
@@ -117,13 +125,13 @@ https://getspm.com
 Description:
 
 ```text
-SPM turns project knowledge into durable, shareable, governed and internally smart memory that agents can query, verify and use safely. The connector exposes smart project memory, temporal state, context packs, graph query, preflight checks and post-action evidence through a project-scoped remote MCP endpoint.
+SPM turns project knowledge into durable, shareable, governed and internally smart memory that agents can query, verify and use safely. The connector exposes smart project memory, temporal state, context packs, graph query, project resolution, explicit multi-project composition, preflight checks and post-action evidence through an authenticated remote MCP endpoint.
 ```
 
 Authentication note:
 
 ```text
-SPM uses project-scoped bearer tokens created or approved inside the SPM workspace. Billing, checkout, invoice payment, customer portal and destructive administration tools are not exposed through the agent connector.
+SPM uses bearer tokens created or approved inside the SPM workspace and scoped to one project, a selected project set or an authorized organization user. Billing, checkout, invoice payment, customer portal and destructive administration tools are not exposed through the agent connector.
 ```
 
 If Smithery cannot scan authenticated tools, use the static server card:
@@ -141,8 +149,8 @@ If a config schema is requested:
   "properties": {
     "spm_api_token": {
       "type": "string",
-      "title": "SPM project token",
-      "description": "A project-scoped SPM token created from the MCP setup console or browser-approved device flow.",
+      "title": "SPM agent token",
+      "description": "An explicitly scoped SPM token created from the MCP setup console or browser-approved device flow.",
       "format": "password"
     }
   }
@@ -178,18 +186,19 @@ SPM is structured project memory for AI agents. It provides smart temporal memor
 Reviewer note:
 
 ```text
-The endpoint is public for discovery and authenticated for use. Public metadata and the static server card describe the tool surface; real tool calls require a project-scoped SPM token.
+The endpoint is public for discovery and authenticated for use. Public metadata and the static server card describe the tool surface; real tool calls require an explicitly scoped SPM token.
 ```
 
 ## Security Boundary
 
 The public connector is intentionally narrower than the full SPM platform. It
 does not expose billing, checkout, invoice payment, customer portal creation,
-tenant deletion, destructive administration, raw secrets or cross-project access.
+tenant deletion, destructive administration, raw secrets or implicit
+cross-project composition.
 
-Agents receive project-memory tools only after authentication with a
-project-scoped token. Returned context is summary and hash oriented; raw event
-bodies are not exposed by the hosted connector.
+Agents receive project-memory tools only after authentication with an
+explicitly scoped token. Returned context is summary and hash oriented; raw
+event bodies are not exposed by the hosted connector.
 
 ## Quality Proof
 
@@ -203,7 +212,7 @@ python3 plugins/spm-codex/scripts/doctor_spm_codex.py --metadata-only
 For a full authenticated smoke, run:
 
 ```bash
-SPM_CODEX_MCP_TOKEN="<project-scoped-token>" python3 plugins/spm-codex/scripts/smoke_spm_remote_mcp.py
+SPM_CODEX_MCP_TOKEN="<scoped-agent-token>" python3 plugins/spm-codex/scripts/smoke_spm_remote_mcp.py
 ```
 
 The full smoke validates remote MCP initialization, tool discovery, temporal

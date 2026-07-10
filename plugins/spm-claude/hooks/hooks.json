@@ -1,0 +1,54 @@
+{
+  "description": "Capture Claude Code project-memory lifecycle events in SPM.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "http",
+            "url": "https://getspm.com/v1/agent-memory-hooks/claude-code",
+            "headers": {
+              "Authorization": "Bearer $SPM_AGENT_TOKEN"
+            },
+            "allowedEnvVars": ["SPM_AGENT_TOKEN"],
+            "statusMessage": "Connecting project memory",
+            "timeout": 45
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "http",
+            "url": "https://getspm.com/v1/agent-memory-hooks/claude-code",
+            "headers": {
+              "Authorization": "Bearer $SPM_AGENT_TOKEN"
+            },
+            "allowedEnvVars": ["SPM_AGENT_TOKEN"],
+            "statusMessage": "Updating project memory",
+            "timeout": 75
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "http",
+            "url": "https://getspm.com/v1/agent-memory-hooks/claude-code",
+            "headers": {
+              "Authorization": "Bearer $SPM_AGENT_TOKEN"
+            },
+            "allowedEnvVars": ["SPM_AGENT_TOKEN"],
+            "statusMessage": "Recording project outcome",
+            "timeout": 75
+          }
+        ]
+      }
+    ]
+  }
+}

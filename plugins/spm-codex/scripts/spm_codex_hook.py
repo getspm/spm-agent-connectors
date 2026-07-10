@@ -1,0 +1,318 @@
+#!/usr/bin/env python3
+"""Codex lifecycle bridge for SPM.
+
+The hook is deliberately fail-open for Codex and fail-closed for memory: an
+ambiguous project or unavailable SPM service never writes to an arbitrary
+project and never blocks the user's task.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import sys
+import urllib.error
+import urllib.request
+from pathlib import Path
+from typing import Any
+
+
+MCP_URL = os.environ.get("SPM_CODEX_MCP_URL", "https://getspm.com/v1/mcp")
+TOKEN_ENV = "SPM_CODEX_MCP_TOKEN"
+MAX_TURN_CHARS = 100_000
+MAX_TRANSCRIPT_BYTES = 4 * 1024 * 1024
+
+
+class SpmHookError(RuntimeError):
+    pass
+
+
+def _rpc_call(tool: str, arguments: dict[str, Any]) -> dict[str, Any]:
+    token = os.environ.get(TOKEN_ENV, "").strip()
+    if not token:
+        raise SpmHookError(f"{TOKEN_ENV} is not configured")
+    body = json.dumps(
+        {
+            "jsonrpc": "2.0",
+            "id": hashlib.sha256(f"{tool}:{json.dumps(arguments, sort_keys=True)}".encode()).hexdigest()[:16],
+            "method": "tools/call",
+            "params": {"name": tool, "arguments": arguments},
+        }
+    ).encode("utf-8")
+    request = urllib.request.Request(
+        MCP_URL,
+        data=body,
+        method="POST",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "X-SPM-MCP-Profile": "agent-core",
+        },
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=70) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except (OSError, urllib.error.URLError, json.JSONDecodeError) as exc:
+        raise SpmHookError(f"SPM MCP request failed: {exc}") from exc
+    if payload.get("error"):
+        raise SpmHookError(f"SPM MCP error: {payload['error'].get('message')}")
+    result = payload.get("result") or {}
+    structured = result.get("structuredContent")
+    if not isinstance(structured, dict):
+        raise SpmHookError("SPM MCP returned no structured content")
+    return structured
+
+
+def _plugin_data_dir() -> Path:
+    configured = os.environ.get("PLUGIN_DATA") or os.environ.get("CLAUDE_PLUGIN_DATA")
+    path = Path(configured).expanduser() if configured else Path.home() / ".codex" / "spm-codex"
+    path.mkdir(parents=True, exist_ok=True)
+    try:
+        path.chmod(0o700)
+    except OSError:
+        pass
+    return path
+
+
+def _session_key(event: dict[str, Any]) -> str:
+    session_id = str(event.get("session_id") or "unknown-session")
+    return hashlib.sha256(session_id.encode("utf-8")).hexdigest()
+
+
+def _state_path(event: dict[str, Any]) -> Path:
+    return _plugin_data_dir() / f"session-{_session_key(event)}.json"
+
+
+def _read_state(event: dict[str, Any]) -> dict[str, Any]:
+    path = _state_path(event)
+    if not path.exists():
+        return {}
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return value if isinstance(value, dict) else {}
+
+
+def _write_state(event: dict[str, Any], state: dict[str, Any]) -> None:
+    path = _state_path(event)
+    temporary = path.with_suffix(".tmp")
+    temporary.write_text(json.dumps(state, sort_keys=True), encoding="utf-8")
+    try:
+        temporary.chmod(0o600)
+    except OSError:
+        pass
+    temporary.replace(path)
+
+
+def _log(event: dict[str, Any], *, status: str, detail: str) -> None:
+    entry = {
+        "event": str(event.get("hook_event_name") or "unknown"),
+        "session_hash": _session_key(event)[:16],
+        "turn_hash": hashlib.sha256(str(event.get("turn_id") or "").encode()).hexdigest()[:16],
+        "status": status,
+        "detail": detail[:1000],
+    }
+    path = _plugin_data_dir() / "lifecycle.log"
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(entry, sort_keys=True) + "\n")
+
+
+def _start_or_resume(event: dict[str, Any], state: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    existing_id = state.get("spm_session_id")
+    if existing_id:
+        try:
+            session = _rpc_call(
+                "spm_agent_session_get",
+                {"session_id": existing_id, "include_projects": True},
+            )
+            return session, state
+        except SpmHookError:
+            state = {}
+    external_session_id = str(event.get("session_id") or "").strip()
+    if not external_session_id:
+        raise SpmHookError("Codex hook did not provide session_id")
+    session = _rpc_call(
+        "spm_agent_session_start",
+        {
+            "client_kind": "codex",
+            "external_session_id": external_session_id,
+            "workspace_hint": str(event.get("cwd") or "") or None,
+            "include_projects": True,
+            "metadata": {
+                "surface": "codex_plugin_hook",
+                "model": str(event.get("model") or "unknown"),
+            },
+        },
+    )
+    state = {
+        "spm_session_id": session["id"],
+        "source_namespace": session.get("source_namespace"),
+    }
+    _write_state(event, state)
+    return session, state
+
+
+def _project_context(session: dict[str, Any]) -> str:
+    active = session.get("active_project") or {}
+    projects = session.get("accessible_projects") or []
+    if active:
+        return (
+            f"SPM agent memory is active for project '{active.get('name')}' "
+            f"({active.get('id')}). Keep ordinary recall and writes in this project. "
+            "List or compose another authorized project only when the user explicitly asks."
+        )
+    names = ", ".join(str(project.get("name")) for project in projects[:12]) or "none"
+    return (
+        "SPM did not select a project because the workspace is ambiguous. "
+        f"Authorized projects: {names}. Ask the user to select an existing project before claiming "
+        "that durable memory was stored."
+    )
+
+
+def _hook_output(event_name: str, context: str, *, warning: str | None = None) -> None:
+    payload: dict[str, Any] = {
+        "continue": True,
+        "hookSpecificOutput": {
+            "hookEventName": event_name,
+            "additionalContext": context,
+        },
+    }
+    if warning:
+        payload["systemMessage"] = warning
+    print(json.dumps(payload))
+
+
+def _direct_turn_text(event: dict[str, Any], role: str) -> str | None:
+    keys = (
+        ("prompt", "user_prompt", "message", "content")
+        if role == "user"
+        else ("last_assistant_message", "assistant_message", "response", "content")
+    )
+    for key in keys:
+        value = event.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()[:MAX_TURN_CHARS]
+    return None
+
+
+def _transcript_turn(event: dict[str, Any], role: str) -> str | None:
+    transcript = event.get("transcript_path")
+    if not isinstance(transcript, str) or not transcript:
+        return None
+    path = Path(transcript)
+    try:
+        with path.open("rb") as handle:
+            handle.seek(0, os.SEEK_END)
+            size = handle.tell()
+            handle.seek(max(0, size - MAX_TRANSCRIPT_BYTES))
+            raw = handle.read().decode("utf-8", errors="replace")
+    except OSError:
+        return None
+    for line in reversed(raw.splitlines()):
+        try:
+            item = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        text = _message_text(item, role)
+        if text:
+            return text[:MAX_TURN_CHARS]
+    return None
+
+
+def _message_text(item: dict[str, Any], role: str) -> str | None:
+    payload = item.get("payload") if isinstance(item.get("payload"), dict) else item
+    if payload.get("type") == "response_item" and isinstance(payload.get("payload"), dict):
+        payload = payload["payload"]
+    if payload.get("role") != role:
+        return None
+    content = payload.get("content")
+    if isinstance(content, str):
+        return content.strip() or None
+    if not isinstance(content, list):
+        return None
+    texts: list[str] = []
+    for part in content:
+        if not isinstance(part, dict):
+            continue
+        text = part.get("text") or part.get("input_text") or part.get("output_text")
+        if isinstance(text, str) and text.strip():
+            texts.append(text.strip())
+    return "\n".join(texts) or None
+
+
+def _ingest(event: dict[str, Any], state: dict[str, Any], *, role: str) -> dict[str, Any] | None:
+    content = _direct_turn_text(event, role) or _transcript_turn(event, role)
+    if not content:
+        return None
+    external_turn_id = str(event.get("turn_id") or "").strip()
+    if not external_turn_id:
+        external_turn_id = hashlib.sha256(f"{role}:{content}".encode()).hexdigest()
+    return _rpc_call(
+        "spm_agent_turn_ingest",
+        {
+            "session_id": state["spm_session_id"],
+            "external_turn_id": external_turn_id,
+            "role": role,
+            "content": content,
+            "workspace_hint": str(event.get("cwd") or "") or None,
+            "actor_ref": "codex-user" if role == "user" else "codex-agent",
+            "actor_role": "user" if role == "user" else "agent",
+            "authority_mode": "advisory",
+            "relevance_target": "Maintain durable memory for the active Codex project task.",
+            "metadata": {
+                "surface": "codex_plugin_hook",
+                "model": str(event.get("model") or "unknown"),
+            },
+        },
+    )
+
+
+def handle(event: dict[str, Any]) -> None:
+    event_name = str(event.get("hook_event_name") or "")
+    state = _read_state(event)
+    session, state = _start_or_resume(event, state)
+    if event_name == "SessionStart":
+        _log(event, status="ready", detail=session.get("resolution_status", "unknown"))
+        _hook_output(event_name, _project_context(session))
+        return
+    if event_name == "UserPromptSubmit":
+        result = _ingest(event, state, role="user")
+        if result and result.get("status") == "requires_project_confirmation":
+            context = _project_context(result.get("session") or session)
+            _log(event, status="requires_project_confirmation", detail=context)
+            _hook_output(event_name, context)
+        else:
+            _log(event, status=(result or {}).get("status", "no_content"), detail="user turn")
+        return
+    if event_name == "Stop":
+        result = _ingest(event, state, role="assistant")
+        _log(event, status=(result or {}).get("status", "no_content"), detail="assistant turn")
+        return
+    _log(event, status="ignored", detail=event_name)
+
+
+def main() -> int:
+    try:
+        event = json.load(sys.stdin)
+        if not isinstance(event, dict):
+            raise SpmHookError("Hook input must be a JSON object")
+        handle(event)
+        return 0
+    except Exception as exc:  # noqa: BLE001 - lifecycle hooks must not block Codex
+        event = locals().get("event") if isinstance(locals().get("event"), dict) else {}
+        _log(event, status="error", detail=str(exc))
+        event_name = str(event.get("hook_event_name") or "")
+        if event_name in {"SessionStart", "UserPromptSubmit"}:
+            _hook_output(
+                event_name,
+                "SPM lifecycle capture is unavailable for this turn. Do not claim that project memory was persisted.",
+                warning="SPM did not persist this turn; Codex work can continue.",
+            )
+        return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

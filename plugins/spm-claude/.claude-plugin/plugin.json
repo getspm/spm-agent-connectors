@@ -1,0 +1,11 @@
+{
+  "name": "spm-claude",
+  "version": "0.1.0",
+  "description": "Automatic durable project memory for Claude Code through SPM.",
+  "author": {
+    "name": "Manna Digital Consulting, S.L.",
+    "url": "https://getspm.com"
+  },
+  "homepage": "https://getspm.com",
+  "keywords": ["mcp", "claude-code", "project-memory", "context-packs"]
+}

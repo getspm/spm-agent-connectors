@@ -17,6 +17,13 @@ from typing import Any
 DEFAULT_ENDPOINT = "https://getspm.com/v1/mcp"
 DEFAULT_TOKEN_ENV_VAR = "SPM_CODEX_MCP_TOKEN"
 REQUIRED_TOOLS = {
+    "spm_projects_list",
+    "spm_project_resolve",
+    "spm_cross_project_context_pack",
+    "spm_multi_project_context_pack",
+    "spm_agent_session_start",
+    "spm_agent_session_get",
+    "spm_agent_session_set_project",
     "spm_temporal_state",
     "spm_temporal_event_create",
     "spm_temporal_context_pack",

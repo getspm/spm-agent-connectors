@@ -1,0 +1,9 @@
+{
+  "name": "@manna-digital/spm-openclaw",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "SPM project-memory bundle for OpenClaw.",
+  "openclaw": {
+    "hooks": ["./hooks/spm-memory"]
+  }
+}

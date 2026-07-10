@@ -1,7 +1,7 @@
 {
   "name": "SPM",
   "display_name": "SPM - Structured Project Memory",
-  "one_line_description": "Durable, shareable and governed project memory for AI agents, delivered through a project-scoped remote MCP connector.",
+  "one_line_description": "Durable, shareable, governed and internally smart project memory for AI agents across projects, tools and teams.",
   "short_description": "SPM gives agents memory they can actually use: relevant requirements, current decisions, completed work, source-backed context, temporal signals and governed sharing boundaries.",
   "positioning": "SPM turns project knowledge into durable, shareable, governed and internally smart memory that agents can query, verify and use safely.",
   "remote_mcp_endpoint": "https://getspm.com/v1/mcp",
@@ -12,11 +12,11 @@
   "security": "https://getspm.com/security",
   "demo_video": "https://getspm.com/sales/spm-current-scoped-trusted-agent-memory.mp4",
   "repository": "https://github.com/getspm/spm-agent-connectors",
-  "release": "https://github.com/getspm/spm-agent-connectors/releases/tag/v0.1.1",
+  "release": "https://github.com/getspm/spm-agent-connectors/releases/tag/v0.2.0",
   "authentication": {
     "required": true,
     "scheme": "bearer",
-    "token_scope": "project",
+    "token_scope": "project, project_set or organization",
     "token_source": "SPM MCP setup console or browser-approved device flow"
   },
   "capabilities": [
@@ -27,7 +27,10 @@
     "MCP, CLI and API use inside agent workflows.",
     "Access control, permissions, expirations, revocation and audit logs.",
     "Provenance, hashes and verification for the context an agent receives.",
-    "Policy and hardening checks before consequential agent actions."
+    "Policy and hardening checks before consequential agent actions.",
+    "Automatic active-project resolution without silently mixing authorized projects.",
+    "Explicit multi-project composition and live federated project mounts.",
+    "Lifecycle adapters that send agent turns to LLM-first memory triage with provenance."
   ],
   "excluded_connector_surfaces": [
     "billing",
@@ -36,7 +39,7 @@
     "customer_portal",
     "destructive_tenant_administration",
     "raw_secret_return",
-    "cross_project_access_without_explicit_project_token"
+    "cross_project_composition_without_explicit_user_request"
   ],
   "categories": [
     "Developer Tools",

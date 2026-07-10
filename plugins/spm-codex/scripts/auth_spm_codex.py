@@ -11,6 +11,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
+import uuid
 import webbrowser
 from pathlib import Path
 from typing import Any
@@ -58,7 +59,19 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Authorize SPM remote MCP for Codex.")
     parser.add_argument("--api-base-url", default=DEFAULT_API_BASE_URL)
     parser.add_argument("--mcp-endpoint", help="Alternative full MCP endpoint; /v1/mcp is stripped to derive API base URL.")
-    parser.add_argument("--project-id", required=True, help="SPM project id to authorize.")
+    parser.add_argument(
+        "--project-id",
+        required=True,
+        help="SPM project used as the authorization anchor.",
+    )
+    parser.add_argument(
+        "--access-mode",
+        choices=("project", "project_set", "organization"),
+        default="organization",
+        help="Authorize one project, a selected project/mount set, or all authorized organization projects.",
+    )
+    parser.add_argument("--allowed-project-id", action="append", type=uuid.UUID, default=[])
+    parser.add_argument("--allowed-external-mount-id", action="append", type=uuid.UUID, default=[])
     parser.add_argument("--client-name", default="Codex")
     parser.add_argument("--scope", action="append", dest="scopes", help="Requested scope. Can be repeated.")
     parser.add_argument("--token-env-var", default=DEFAULT_TOKEN_ENV_VAR)
@@ -72,6 +85,14 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    if args.access_mode != "project_set" and (
+        args.allowed_project_id or args.allowed_external_mount_id
+    ):
+        print(
+            "Selected project and mount ids require --access-mode project_set.",
+            file=sys.stderr,
+        )
+        raise SystemExit(2)
     api_base_url = api_base_from_endpoint(args.mcp_endpoint or args.api_base_url)
     code_url = f"{api_base_url}/v1/mcp/device/code"
     token_url = f"{api_base_url}/v1/mcp/device/token"
@@ -79,6 +100,11 @@ def main() -> None:
         code_url,
         {
             "project_id": args.project_id,
+            "access_mode": args.access_mode,
+            "allowed_project_ids": [str(value) for value in args.allowed_project_id],
+            "allowed_external_mount_ids": [
+                str(value) for value in args.allowed_external_mount_id
+            ],
             "client_name": args.client_name,
             "scopes": args.scopes,
         },

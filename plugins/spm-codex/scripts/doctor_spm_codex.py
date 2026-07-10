@@ -15,21 +15,36 @@ from typing import Any
 DEFAULT_ENDPOINT = "https://getspm.com/v1/mcp"
 DEFAULT_TOKEN_ENV_VAR = "SPM_CODEX_MCP_TOKEN"
 REQUIRED_TOOLS = {
-    "spm_temporal_state",
+    "spm_agent_action_report",
+    "spm_agent_session_get",
+    "spm_agent_session_set_project",
+    "spm_agent_session_start",
+    "spm_agent_turn_ingest",
+    "spm_agent_policy_pack",
+    "spm_agent_preflight",
+    "spm_context_boundaries_list",
+    "spm_context_boundary_get",
+    "spm_context_boundary_pack",
+    "spm_cross_project_context_pack",
+    "spm_multi_project_context_pack",
+    "spm_project_resolve",
+    "spm_projects_list",
     "spm_temporal_context_pack",
     "spm_temporal_context_pack_verify",
+    "spm_temporal_event_create",
     "spm_temporal_graph_query",
-    "spm_context_boundary_pack",
-    "spm_agent_preflight",
-    "spm_agent_policy_pack",
-    "spm_agent_action_report",
+    "spm_temporal_state",
+    "spm_trust_remediation_plan",
+    "spm_trust_status",
 }
 FORBIDDEN_TOOL_FRAGMENTS = (
     "billing",
     "checkout",
+    "payment",
     "invoice_payment",
     "customer_portal",
     "delete_project",
+    "destructive_admin",
 )
 
 
@@ -70,12 +85,36 @@ def validate_metadata(metadata: dict[str, Any]) -> list[str]:
     missing = sorted(REQUIRED_TOOLS - names)
     forbidden = sorted(name for name in names if any(fragment in name for fragment in FORBIDDEN_TOOL_FRAGMENTS))
     errors: list[str] = []
+    security = metadata.get("security", {})
     if metadata.get("requires_auth") is not True:
         errors.append("metadata does not require auth")
-    if metadata.get("security", {}).get("secret_return") is not False:
+    if security.get("project_scoped") != "supported":
+        errors.append("metadata does not advertise project-scoped tokens")
+    if security.get("org_scoped_project_resolution") is not True:
+        errors.append("metadata does not advertise org-scoped project resolution")
+    if security.get("default_project_behavior") != "active_project_only":
+        errors.append("metadata default project behavior is not active_project_only")
+    if security.get("cross_project_behavior") != "explicit_request_required":
+        errors.append("metadata cross-project behavior is not explicit_request_required")
+    if security.get("event_bodies") != "summaries_only":
+        errors.append("metadata event body mode is not summaries_only")
+    if security.get("secret_return") is not False:
         errors.append("metadata allows secret return")
-    if metadata.get("security", {}).get("checkout_tools_exposed") is not False:
+    if security.get("billing_tools_exposed") is not False:
+        errors.append("metadata exposes billing tools")
+    if security.get("checkout_tools_exposed") is not False:
         errors.append("metadata exposes checkout tools")
+    if security.get("destructive_admin_tools_exposed") is not False:
+        errors.append("metadata exposes destructive admin tools")
+
+    agent_core = metadata.get("profiles", {}).get("agent-core", {})
+    if agent_core.get("mode") != "read-write":
+        errors.append("agent-core profile is not read-write")
+    if agent_core.get("allow_body") is not False:
+        errors.append("agent-core profile allows event bodies")
+    if agent_core.get("allow_secret_return") is not False:
+        errors.append("agent-core profile allows secret return")
+
     if missing:
         errors.append(f"metadata missing required tools: {', '.join(missing)}")
     if forbidden:

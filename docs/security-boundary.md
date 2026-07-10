@@ -18,13 +18,16 @@ platform.
 - Invoice payment.
 - Tenant deletion or destructive administration.
 - Raw secret return.
-- Cross-project access without explicit project-scoped authorization.
+- Cross-project composition without an explicit user request and authorization
+  for every source project.
 
 ## Operational Model
 
 Agents authenticate with bearer tokens created or approved inside SPM. Tokens
-should be scoped to one project and one operating mode. The SPM server applies
-plan, quota, scope, permission and policy checks before serving tools.
+may be restricted to one project, a selected project set or the projects an
+organization user may access. Every conversation still has one active project;
+visibility of other projects never authorizes silent mixing. The SPM server
+applies plan, quota, scope, permission and policy checks before serving tools.
 
 The public connector package is not the SPM platform. It is a client-side
 integration layer that points trusted agent clients at the hosted SPM MCP

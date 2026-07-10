@@ -1,6 +1,6 @@
 {
   "name": "spm-codex",
-  "version": "0.1.0",
+  "version": "0.1.0+codex.20260710083907",
   "description": "Connect Codex to Structured Project Memory through the hosted SPM MCP endpoint.",
   "author": {
     "name": "Manna Digital Consulting, S.L.",
@@ -9,17 +9,32 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "SPM for Codex",
-    "shortDescription": "Project memory for Codex through SPM remote MCP.",
-    "longDescription": "SPM for Codex connects Codex to project-scoped temporal memory, context packs, context boundaries, graph query, preflight and post-action reports through the SPM remote MCP endpoint. The connector can authorize through a browser-approved SPM device flow, uses a project-scoped token from your SPM tenant and keeps billing, checkout and destructive admin tools outside the agent surface.",
+    "shortDescription": "Automatic, multi-project memory for Codex through SPM.",
+    "longDescription": "SPM for Codex maintains durable project memory throughout the Codex task lifecycle. Hooks submit user and assistant turns to LLM-first memory triage with automatic provenance, while the hosted MCP endpoint provides temporal state, context packs, context boundaries, graph query, active-project resolution, explicit cross-project composition, trust status, preflight and post-action reports. Browser-approved tokens can be limited to one project or authorized organization projects; each conversation keeps one active project and never mixes another project unless the user explicitly requests it.",
     "developerName": "Manna Digital Consulting, S.L.",
     "category": "Productivity",
+    "websiteURL": "https://getspm.com",
+    "privacyPolicyURL": "https://getspm.com/privacy",
+    "termsOfServiceURL": "https://getspm.com/terms",
+    "brandColor": "#0A3D2A",
+    "composerIcon": "./assets/spm-icon.svg",
+    "logo": "./assets/spm-logo.svg",
+    "logoDark": "./assets/spm-logo-dark.svg",
     "capabilities": [
       "MCP",
       "Project memory",
       "Context packs",
+      "Project resolution",
+      "Automatic memory triage",
+      "Multi-project composition",
+      "Governed sharing",
       "Agent hardening"
     ],
-    "defaultPrompt": "Use SPM as project memory for consequential Codex work. Query temporal state before important changes, request scoped context packs, run preflight when risk is material, and report completed work with tests and evidence."
+    "defaultPrompt": [
+      "Work on this project with its durable memory, constraints, risks and decisions in scope.",
+      "Use authorized cross-project context only if I explicitly ask for it.",
+      "Review this change against temporal memory, authority, tests and release risk."
+    ]
   },
   "homepage": "https://getspm.com",
   "keywords": [

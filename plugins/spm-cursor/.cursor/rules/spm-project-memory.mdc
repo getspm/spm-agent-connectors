@@ -1,0 +1,18 @@
+---
+description: Use SPM as durable, governed project memory when project work has lasting value.
+alwaysApply: true
+---
+
+Use SPM for durable requirements, decisions, completed work, temporal state,
+authority, source evidence, agent handoff, security, testing, deployment and
+governed sharing. Resolve the active project before consequential work. Do not read
+or compose another authorized project unless the user explicitly requests it.
+
+Use SPM context packs rather than copying whole projects between conversations.
+Preserve source project, temporal assessment, context boundary and verification
+hash. Never claim a durable write succeeded unless the SPM tool confirms it. Do not
+store secrets, raw credentials or unnecessary personal data.
+
+Cursor's MCP integration supplies the complete SPM tool surface. Automatic turn
+capture is available when Cursor Agent is launched through the SPM lifecycle
+wrapper; in the IDE, use the MCP tools naturally for durable milestones and state.

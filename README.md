@@ -4,8 +4,9 @@ Public connector package for SPM - Structured Project Memory.
 
 SPM turns project knowledge into durable, shareable, governed and internally
 smart project memory for AI agents. This repository contains only the public
-connector surface: MCP configuration, Codex plugin metadata, setup scripts,
-examples and security guidance.
+connector surface: the authenticated remote MCP configuration, installable
+bundles for Codex, Claude Code, Cursor and OpenClaw, browser authorization
+helpers, lifecycle adapters, examples and security guidance.
 
 The SPM application, backend, billing system, private console, memory engine and
 infrastructure are not included in this repository.
@@ -37,15 +38,20 @@ com.getspm/spm
 The endpoint is public for discovery, but authenticated for use. A client needs:
 
 - an SPM account;
-- an organization and project;
+- an organization and at least one project;
 - a trial or paid plan;
-- a project-scoped SPM token.
+- an SPM token authorized for one project, a selected project set or the
+  projects the user may access in an organization.
 
 ## What Agents Can Do
 
 Connector profiles expose the agent-facing SPM surface:
 
 - use durable project memory across chats, runs and tools;
+- resolve the active project without confusing it with other authorized
+  projects;
+- list authorized projects and compose cross-project context only when the
+  user explicitly requests it;
 - work with smart memory packs that preserve requirements, current decisions,
   completed work, source-backed context and temporal signals;
 - query temporal project memory;
@@ -53,7 +59,9 @@ Connector profiles expose the agent-facing SPM surface:
 - verify context pack provenance and hashes;
 - query context graphs and boundaries;
 - run policy-aware preflight checks;
-- report completed actions, tests, evidence and decisions.
+- report completed actions, tests, evidence and decisions;
+- submit agent lifecycle turns to LLM-first memory triage with source
+  provenance, when the client supports lifecycle hooks.
 
 ## Typical Use Cases
 
@@ -99,10 +107,13 @@ startup_timeout_sec = 30
 tool_timeout_sec = 120
 ```
 
-Authorize a project-scoped token:
+Authorize Codex for all projects the signed-in organization user may access:
 
 ```bash
-python3 plugins/spm-codex/scripts/auth_spm_codex.py --project-id <project-id> --write-env ~/.spm/codex.env
+python3 plugins/spm-codex/scripts/auth_spm_codex.py \
+  --project-id <authorization-project-id> \
+  --access-mode organization \
+  --write-env ~/.spm/codex.env
 source ~/.spm/codex.env
 ```
 
@@ -119,11 +130,12 @@ python3 plugins/spm-codex/scripts/smoke_spm_remote_mcp.py
 ```
 
 The smoke uses the same `SPM_CODEX_MCP_TOKEN` as Codex. It initializes the
-hosted MCP endpoint, verifies the exposed tool surface, creates a small
-project-scoped smoke memory event, reads temporal state, creates and verifies a
-context pack, queries the context graph, runs agent preflight and reports
-post-action evidence. It never prints the token and the hosted connector strips
-raw event bodies from returned context.
+hosted MCP endpoint, verifies the project-resolution, multi-project,
+agent-session and memory tool surface, creates a small project-scoped smoke
+memory event, reads temporal state, creates and verifies a context pack, queries
+the context graph, runs agent preflight and reports post-action evidence. It
+never prints the token and the hosted connector strips raw event bodies from
+returned context.
 
 For a non-mutating token check, use:
 
@@ -131,9 +143,17 @@ For a non-mutating token check, use:
 python3 plugins/spm-codex/scripts/smoke_spm_remote_mcp.py --read-only
 ```
 
-## Other MCP Clients
+## Claude Code, Cursor And OpenClaw
 
-Use the same endpoint with a project-scoped bearer token. See:
+The repository includes native client bundles:
+
+- `plugins/spm-claude`
+- `plugins/spm-cursor`
+- `plugins/spm-openclaw`
+
+Clients that only support MCP can use the same remote endpoint and bearer
+token. The generic authorization helper is
+`scripts/agent-connectors/authorize_spm_agent.py`. See also:
 
 - `examples/codex/config.toml`
 - `examples/claude-desktop/claude_desktop_config.json`
@@ -143,7 +163,9 @@ Use the same endpoint with a project-scoped bearer token. See:
 ## Security
 
 Do not commit tokens. Prefer environment variables or each agent client's
-secret storage. Tokens should be project-scoped and revocable from SPM.
+secret storage. Tokens must be explicitly scoped and revocable from SPM.
+Organization visibility does not permit silent project mixing: each task keeps
+one active project, while cross-project packs require an explicit user request.
 
 See `SECURITY.md` and `docs/security-boundary.md`.
 

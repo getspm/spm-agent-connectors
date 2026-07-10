@@ -1,0 +1,12 @@
+{
+  "name": "spm-openclaw",
+  "version": "0.1.0",
+  "description": "Automatic, governed project memory for OpenClaw through SPM.",
+  "author": {
+    "name": "Manna Digital Consulting, S.L.",
+    "url": "https://getspm.com"
+  },
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "homepage": "https://getspm.com"
+}

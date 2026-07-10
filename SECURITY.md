@@ -8,7 +8,8 @@ infrastructure configuration.
 
 - Never commit bearer tokens, API keys or `.env` files with real values.
 - Use `SPM_CODEX_MCP_TOKEN` or equivalent client-side secret storage.
-- Use project-scoped tokens.
+- Use tokens explicitly scoped to one project, a selected project set or an
+  authorized organization user.
 - Revoke tokens from SPM when an agent, laptop or workspace should lose access.
 
 ## Agent Boundary

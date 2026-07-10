@@ -1,0 +1,41 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$PLUGIN_ROOT/scripts/spm_codex_hook.py\"",
+            "statusMessage": "Connecting project memory",
+            "timeout": 45
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$PLUGIN_ROOT/scripts/spm_codex_hook.py\"",
+            "statusMessage": "Triaging project memory",
+            "timeout": 75
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$PLUGIN_ROOT/scripts/spm_codex_hook.py\"",
+            "statusMessage": "Recording project outcome",
+            "timeout": 75
+          }
+        ]
+      }
+    ]
+  }
+}

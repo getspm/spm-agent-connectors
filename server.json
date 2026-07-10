@@ -2,13 +2,13 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "com.getspm/spm",
   "title": "SPM - Structured Project Memory",
-  "description": "Durable, shareable and governed project memory for AI agents, delivered through a project-scoped remote MCP connector.",
+  "description": "Durable, shareable and governed project memory with smart triage and explicit project composition.",
   "websiteUrl": "https://getspm.com",
   "repository": {
     "url": "https://github.com/getspm/spm-agent-connectors",
     "source": "github"
   },
-  "version": "0.1.1",
+  "version": "0.2.0",
   "remotes": [
     {
       "type": "streamable-http",
@@ -16,7 +16,7 @@
       "headers": [
         {
           "name": "Authorization",
-          "description": "Bearer token for a project-scoped SPM MCP connector token.",
+          "description": "Bearer token authorized for one project, a selected project set or the projects available to an organization user.",
           "isRequired": true,
           "isSecret": true
         }
@@ -37,7 +37,7 @@
         "customer_portal",
         "destructive_tenant_administration",
         "raw_secret_return",
-        "cross_project_access_without_explicit_project_token"
+        "cross_project_composition_without_explicit_user_request"
       ],
       "capabilities": [
         "smart_project_memory",
@@ -47,7 +47,11 @@
         "mcp_cli_api_injection",
         "access_control",
         "provenance_hash_verification",
-        "agent_policy_preflight"
+        "agent_policy_preflight",
+        "automatic_project_resolution",
+        "explicit_multi_project_composition",
+        "federated_project_mounts",
+        "agent_lifecycle_triage"
       ]
     }
   }
