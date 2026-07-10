@@ -5,8 +5,8 @@ This plugin connects Codex to Structured Project Memory through the hosted SPM r
 SPM gives Codex durable project memory, temporal state, context packs, context
 boundaries, project resolution, explicit cross-project packs, trust status,
 preflight and post-action reports. Lifecycle hooks submit user and assistant
-turns to SPM's LLM-first triage, so durable memory does not depend on the user
-asking Codex to store it explicitly.
+turns under the effective SPM capture policy, then LLM-first triage derives
+durable memory. The user does not need to ask Codex to store it explicitly.
 
 ## Install
 
@@ -51,13 +51,15 @@ capture resumes.
 
 - `SessionStart` starts or resumes an SPM agent-memory session and resolves the
   current workspace against authorized projects.
-- `UserPromptSubmit` sends the user turn to LLM-first triage.
+- `UserPromptSubmit` applies the effective selective, complete redacted,
+  summaries-only or metadata-only capture policy before LLM-first triage.
 - `Stop` sends the final assistant turn and its achieved state to the same
   project session.
 - Ambiguous project identity produces a confirmation request and no memory
   write. The hook never chooses an arbitrary project and never blocks Codex.
-- SPM generates `codex://session/.../turn/...` provenance automatically. Raw
-  transcripts are not stored in the session tables.
+- SPM generates `codex://session/.../turn/...` provenance automatically. Full
+  source retention is optional, redacted and encrypted in a separate journal;
+  session tables never contain raw transcripts.
 
 ## Verify
 

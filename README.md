@@ -62,6 +62,10 @@ Connector profiles expose the agent-facing SPM surface:
 - report completed actions, tests, evidence and decisions;
 - submit agent lifecycle turns to LLM-first memory triage with source
   provenance, when the client supports lifecycle hooks.
+- choose selective, complete redacted, summaries-only or metadata-only source
+  capture independently from the memory that triage promotes for future use;
+- inspect and verify an append-ordered capture journal without exposing retained
+  conversation bodies to agent tools.
 
 ## Typical Use Cases
 
