@@ -8,7 +8,7 @@
     "url": "https://github.com/getspm/spm-agent-connectors",
     "source": "github"
   },
-  "version": "0.2.0",
+  "version": "0.2.1",
   "remotes": [
     {
       "type": "streamable-http",

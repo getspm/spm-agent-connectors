@@ -27,6 +27,7 @@ REQUIRED_FILES = [
     ROOT / "plugins" / "spm-openclaw" / "hooks" / "spm-memory" / "handler.js",
     ROOT / "scripts" / "agent-connectors" / "authorize_spm_agent.py",
     ROOT / "scripts" / "agent-connectors" / "spm-agent-lifecycle.py",
+    ROOT / "tests" / "test_smoke_metadata.py",
     ROOT / "docs" / "security-boundary.md",
     ROOT / "docs" / "publishing.md",
     ROOT / "docs" / "directory-listing-pack.md",
@@ -113,7 +114,7 @@ def main() -> int:
     assert server["websiteUrl"] == "https://getspm.com"
     assert server["repository"]["url"] == "https://github.com/getspm/spm-agent-connectors"
     assert server["repository"]["source"] == "github"
-    assert server["version"] == "0.2.0"
+    assert server["version"] == "0.2.1"
     assert "packages" not in server
     assert server["remotes"][0]["type"] == "streamable-http"
     assert server["remotes"][0]["url"] == "https://getspm.com/v1/mcp"

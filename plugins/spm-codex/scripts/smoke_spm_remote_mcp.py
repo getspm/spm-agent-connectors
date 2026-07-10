@@ -150,14 +150,19 @@ def validate_metadata(metadata: dict[str, Any]) -> list[str]:
         errors.append("metadata does not require auth")
     security = metadata.get("security") if isinstance(metadata.get("security"), dict) else {}
     expected_security = {
-        "project_scoped": True,
+        "project_scoped": "supported",
         "secret_return": False,
         "billing_tools_exposed": False,
         "checkout_tools_exposed": False,
         "destructive_admin_tools_exposed": False,
+        "org_scoped_project_resolution": True,
+        "selected_project_set": "supported",
+        "default_project_behavior": "active_project_only",
+        "cross_project_behavior": "explicit_request_required",
+        "external_project_mounts": "supported_with_live_boundary_enforcement",
     }
     for key, expected in expected_security.items():
-        if security.get(key) is not expected:
+        if security.get(key) != expected:
             errors.append(f"metadata security.{key} expected {expected!r}")
     if security.get("event_bodies") != "summaries_only":
         errors.append("metadata security.event_bodies is not summaries_only")
