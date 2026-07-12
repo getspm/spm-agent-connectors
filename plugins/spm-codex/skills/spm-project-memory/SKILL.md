@@ -9,7 +9,7 @@ Use the `spm` MCP server as the durable project-memory authority for consequenti
 
 ## Operating Loop
 
-1. At task start, use `spm_agent_session_start` or the bundled lifecycle hook to establish one active project and inspect the authorized project catalog. If project identity is unresolved, ask the user instead of writing memory.
+1. At task start, use `spm_agent_session_start` or the bundled lifecycle hook to establish one active project and inspect the authorized project catalog. If SPM returns `bootstrap_required`, call `spm_project_bootstrap_preview` with source-grounded context from the task and present its confirmation URL. The user chooses create, link or skip; never create project memory silently. For ordinary ambiguity among existing projects, ask the user instead of writing memory.
 2. Call `spm_temporal_state` or `spm_temporal_context_pack` to understand current project memory for the active topic, context area and task.
 3. If the task touches architecture, tests, security, auth, data, deployment, billing, customer-facing copy, external sharing or policy, call `spm_agent_preflight` before editing or executing.
 4. Let the lifecycle hook submit user and assistant turns to `spm_agent_turn_ingest`. SPM applies the effective session/project/org capture policy before LLM-first triage decides what to store, update, relate, temporalize, promote or discard. Use `spm_memory_capture_policy_get` to inspect that policy and `spm_temporal_event_create` only for deliberate operator-authored events.
@@ -64,6 +64,8 @@ The hosted `agent-core` connector currently exposes these core tools:
 - `spm_cross_project_context_pack`
 - `spm_multi_project_context_pack`
 - `spm_project_resolve`
+- `spm_project_bootstrap_preview`
+- `spm_project_bootstrap_status`
 - `spm_projects_list`
 - `spm_temporal_context_pack`
 - `spm_temporal_context_pack_verify`

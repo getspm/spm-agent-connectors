@@ -164,6 +164,13 @@ def _project_context(session: dict[str, Any]) -> str:
             f"({active.get('id')}). Keep ordinary recall and writes in this project. "
             "List or compose another authorized project only when the user explicitly asks."
         )
+    if session.get("bootstrap") or session.get("resolution_status") == "bootstrap_required":
+        return (
+            "SPM found no reliable project-memory match for this work. Call "
+            "spm_project_bootstrap_preview with source-grounded context from this task, then present "
+            "the returned confirmation URL. The user decides whether to create project memory, link "
+            "an existing project, or continue without durable memory. Do not claim persistence before confirmation."
+        )
     names = ", ".join(str(project.get("name")) for project in projects[:12]) or "none"
     return (
         "SPM did not select a project because the workspace is ambiguous. "
@@ -280,7 +287,10 @@ def handle(event: dict[str, Any]) -> None:
         return
     if event_name == "UserPromptSubmit":
         result = _ingest(event, state, role="user")
-        if result and result.get("status") == "requires_project_confirmation":
+        if result and result.get("status") in {
+            "requires_project_confirmation",
+            "bootstrap_required",
+        }:
             context = _project_context(result.get("session") or session)
             _log(event, status="requires_project_confirmation", detail=context)
             _hook_output(event_name, context)

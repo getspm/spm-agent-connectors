@@ -15,6 +15,12 @@ active project first. List or compose another authorized project only when the u
 explicitly requests cross-project context. Never claim that memory was persisted if
 SPM reports ambiguity or a failed write.
 
+If SPM returns `bootstrap_required`, prepare a source-grounded proposal with
+`spm_project_bootstrap_preview` and present its confirmation URL. The user decides
+whether to create project memory, link an existing project or continue without
+durable memory. Never create a project silently or claim persistence before the
+review is confirmed.
+
 Do not store secrets, credentials, raw private tokens or unnecessary personal data.
 Use context packs for handoff and preserve project id, source, temporal assessment,
 policy boundary and verification hash.

@@ -12,7 +12,7 @@
   "security": "https://getspm.com/security",
   "demo_video": "https://getspm.com/sales/spm-current-scoped-trusted-agent-memory.mp4",
   "repository": "https://github.com/getspm/spm-agent-connectors",
-  "release": "https://github.com/getspm/spm-agent-connectors/releases/tag/v0.2.1",
+  "release": "https://github.com/getspm/spm-agent-connectors/releases/tag/v0.2.2",
   "authentication": {
     "required": true,
     "scheme": "bearer",
@@ -30,7 +30,8 @@
     "Policy and hardening checks before consequential agent actions.",
     "Automatic active-project resolution without silently mixing authorized projects.",
     "Explicit multi-project composition and live federated project mounts.",
-    "Lifecycle adapters that send agent turns to LLM-first memory triage with provenance."
+    "Lifecycle adapters that send agent turns to LLM-first memory triage with provenance.",
+    "Reviewable project-memory bootstrap when an agent cannot resolve an existing project safely."
   ],
   "excluded_connector_surfaces": [
     "billing",

@@ -114,7 +114,7 @@ def main() -> int:
     assert server["websiteUrl"] == "https://getspm.com"
     assert server["repository"]["url"] == "https://github.com/getspm/spm-agent-connectors"
     assert server["repository"]["source"] == "github"
-    assert server["version"] == "0.2.1"
+    assert server["version"] == "0.2.2"
     assert "packages" not in server
     assert server["remotes"][0]["type"] == "streamable-http"
     assert server["remotes"][0]["url"] == "https://getspm.com/v1/mcp"
@@ -128,6 +128,7 @@ def main() -> int:
     assert "smart_project_memory" in publisher_meta["capabilities"]
     assert "explicit_multi_project_composition" in publisher_meta["capabilities"]
     assert "agent_lifecycle_triage" in publisher_meta["capabilities"]
+    assert "reviewable_project_memory_bootstrap" in publisher_meta["capabilities"]
 
     for path in iter_text_files():
         text = path.read_text(encoding="utf-8", errors="ignore")

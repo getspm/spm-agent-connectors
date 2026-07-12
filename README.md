@@ -66,6 +66,8 @@ Connector profiles expose the agent-facing SPM surface:
   capture independently from the memory that triage promotes for future use;
 - inspect and verify an append-ordered capture journal without exposing retained
   conversation bodies to agent tools.
+- propose a source-grounded project-memory bootstrap when no authorized project
+  matches, then wait for the user to create, link or skip it in SPM.
 
 ## Typical Use Cases
 
