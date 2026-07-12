@@ -11,14 +11,16 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import shlex
 import sys
+import tomllib
 import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Any
 
 
-MCP_URL = os.environ.get("SPM_CODEX_MCP_URL", "https://getspm.com/v1/mcp")
+DEFAULT_MCP_URL = "https://getspm.com/v1/mcp"
 TOKEN_ENV = "SPM_CODEX_MCP_TOKEN"
 MAX_TURN_CHARS = 100_000
 MAX_TRANSCRIPT_BYTES = 4 * 1024 * 1024
@@ -29,9 +31,12 @@ class SpmHookError(RuntimeError):
 
 
 def _rpc_call(tool: str, arguments: dict[str, Any]) -> dict[str, Any]:
-    token = os.environ.get(TOKEN_ENV, "").strip()
+    endpoint, token = _resolve_credentials()
     if not token:
-        raise SpmHookError(f"{TOKEN_ENV} is not configured")
+        raise SpmHookError(
+            f"{TOKEN_ENV} is not configured and no token was found in "
+            "~/.spm/codex.env or ~/.spm/config.toml"
+        )
     body = json.dumps(
         {
             "jsonrpc": "2.0",
@@ -41,7 +46,7 @@ def _rpc_call(tool: str, arguments: dict[str, Any]) -> dict[str, Any]:
         }
     ).encode("utf-8")
     request = urllib.request.Request(
-        MCP_URL,
+        endpoint,
         data=body,
         method="POST",
         headers={
@@ -63,6 +68,57 @@ def _rpc_call(tool: str, arguments: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(structured, dict):
         raise SpmHookError("SPM MCP returned no structured content")
     return structured
+
+
+def _resolve_credentials() -> tuple[str, str]:
+    explicit_endpoint = os.environ.get("SPM_CODEX_MCP_URL", "").strip()
+    token = os.environ.get(TOKEN_ENV, "").strip()
+    if not token:
+        token = _token_from_codex_env(Path.home() / ".spm" / "codex.env")
+
+    config = _spm_config(Path.home() / ".spm" / "config.toml")
+    if not token:
+        token = str(config.get("token") or "").strip()
+    endpoint = explicit_endpoint or _mcp_endpoint(str(config.get("api_url") or ""))
+    return endpoint or DEFAULT_MCP_URL, token
+
+
+def _token_from_codex_env(path: Path) -> str:
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return ""
+    for line in lines:
+        try:
+            parts = shlex.split(line, comments=True, posix=True)
+        except ValueError:
+            continue
+        if parts and parts[0] == "export":
+            parts = parts[1:]
+        for part in parts:
+            prefix = f"{TOKEN_ENV}="
+            if part.startswith(prefix):
+                return part[len(prefix) :].strip()
+    return ""
+
+
+def _spm_config(path: Path) -> dict[str, Any]:
+    try:
+        value = tomllib.loads(path.read_text(encoding="utf-8"))
+    except (OSError, tomllib.TOMLDecodeError):
+        return {}
+    return value if isinstance(value, dict) else {}
+
+
+def _mcp_endpoint(api_url: str) -> str:
+    cleaned = api_url.strip().rstrip("/")
+    if not cleaned:
+        return ""
+    if cleaned.endswith("/v1/mcp"):
+        return cleaned
+    if cleaned.endswith("/v1"):
+        return f"{cleaned}/mcp"
+    return f"{cleaned}/v1/mcp"
 
 
 def _plugin_data_dir() -> Path:
