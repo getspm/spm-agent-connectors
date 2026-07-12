@@ -15,6 +15,10 @@ active project first. List or compose another authorized project only when the u
 explicitly requests cross-project context. Never claim that memory was persisted if
 SPM reports ambiguity or a failed write.
 
+Surface project attention returned at session start before continuing with the first
+request. Display is not acknowledgement: update recipient state only after an explicit
+user instruction to acknowledge, defer, resolve or dismiss an item.
+
 If SPM returns `bootstrap_required`, prepare a source-grounded proposal with
 `spm_project_bootstrap_preview` and present its confirmation URL. The user decides
 whether to create project memory, link an existing project or continue without

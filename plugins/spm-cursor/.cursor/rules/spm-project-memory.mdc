@@ -13,6 +13,9 @@ Preserve source project, temporal assessment, context boundary and verification
 hash. Never claim a durable write succeeded unless the SPM tool confirms it. Do not
 store secrets, raw credentials or unnecessary personal data.
 
+Surface pending project attention at session start. Display is not acknowledgement or
+resolution; update attention state only after an explicit user instruction.
+
 Cursor's MCP integration supplies the complete SPM tool surface. Automatic turn
 capture is available when Cursor Agent is launched through the SPM lifecycle
 wrapper; in the IDE, use the MCP tools naturally for durable milestones and state.

@@ -128,6 +128,16 @@ def _start_or_resume(event: dict[str, Any], state: dict[str, Any]) -> tuple[dict
                 "spm_agent_session_get",
                 {"session_id": existing_id, "include_projects": True},
             )
+            active = session.get("active_project") or {}
+            session["attention_briefing"] = _rpc_call(
+                "spm_attention_briefing",
+                {
+                    "project_id": active.get("id"),
+                    "mode": "relevant",
+                    "limit": 8,
+                    "mark_surfaced": True,
+                },
+            )
             return session, state
         except SpmHookError:
             state = {}
@@ -141,6 +151,9 @@ def _start_or_resume(event: dict[str, Any], state: dict[str, Any]) -> tuple[dict
             "external_session_id": external_session_id,
             "workspace_hint": str(event.get("cwd") or "") or None,
             "include_projects": True,
+            "include_attention_briefing": True,
+            "attention_mode": "relevant",
+            "attention_limit": 8,
             "metadata": {
                 "surface": "codex_plugin_hook",
                 "model": str(event.get("model") or "unknown"),
@@ -159,11 +172,13 @@ def _project_context(session: dict[str, Any]) -> str:
     active = session.get("active_project") or {}
     projects = session.get("accessible_projects") or []
     if active:
-        return (
+        context = (
             f"SPM agent memory is active for project '{active.get('name')}' "
             f"({active.get('id')}). Keep ordinary recall and writes in this project. "
             "List or compose another authorized project only when the user explicitly asks."
         )
+        attention = _attention_context(session.get("attention_briefing"))
+        return f"{context}\n\n{attention}" if attention else context
     if session.get("bootstrap") or session.get("resolution_status") == "bootstrap_required":
         return (
             "SPM found no reliable project-memory match for this work. Call "
@@ -177,6 +192,31 @@ def _project_context(session: dict[str, Any]) -> str:
         f"Authorized projects: {names}. Ask the user to select an existing project before claiming "
         "that durable memory was stored."
     )
+
+
+def _attention_context(briefing: Any) -> str:
+    if not isinstance(briefing, dict) or not briefing.get("pending_count"):
+        return ""
+    lines = [
+        "Project attention is pending. At the beginning of your response, surface this compact "
+        "briefing to the user before continuing with their request. Do not claim an item was read, "
+        "acknowledged or resolved unless the user explicitly says so.",
+        str(briefing.get("headline") or "Pending project communication."),
+    ]
+    for entry in list(briefing.get("items") or [])[:3]:
+        item = entry.get("item") if isinstance(entry, dict) else {}
+        why_now = entry.get("why_now") if isinstance(entry, dict) else None
+        if not isinstance(item, dict) or not item.get("title"):
+            continue
+        suffix = f" — {why_now}" if why_now else ""
+        lines.append(f"- {item['title']}{suffix}")
+    if len(list(briefing.get("items") or [])) > 3:
+        lines.append("- Additional pending communications are available through spm_attention_briefing.")
+    lines.append(
+        "Use spm_attention_state_update only after an explicit user instruction to acknowledge, "
+        "defer, resolve or dismiss a receipt."
+    )
+    return "\n".join(lines)
 
 
 def _hook_output(event_name: str, context: str, *, warning: str | None = None) -> None:
