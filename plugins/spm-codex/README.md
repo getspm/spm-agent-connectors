@@ -25,6 +25,12 @@ Manual fallback: generate or reveal a project-scoped SPM agent token from the pr
 export SPM_CODEX_MCP_TOKEN="<project-scoped-token>"
 ```
 
+The global lifecycle hook never reuses the token in `~/.spm/config.toml` by
+default because that CLI token may be limited to an unrelated project. A
+deliberately project-local installation may opt in with
+`SPM_CODEX_ALLOW_CLI_TOKEN=1`; otherwise a missing Codex token disables memory
+capture for that turn without blocking Codex.
+
 Organization mode is appropriate when the same authorized user works across
 several projects. Visibility does not imply mixing: each task keeps one active
 project, and cross-project context packs require an explicit user request.

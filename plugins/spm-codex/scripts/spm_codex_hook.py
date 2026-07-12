@@ -22,6 +22,7 @@ from typing import Any
 
 DEFAULT_MCP_URL = "https://getspm.com/v1/mcp"
 TOKEN_ENV = "SPM_CODEX_MCP_TOKEN"
+CLI_TOKEN_OPT_IN_ENV = "SPM_CODEX_ALLOW_CLI_TOKEN"
 MAX_TURN_CHARS = 100_000
 MAX_TRANSCRIPT_BYTES = 4 * 1024 * 1024
 
@@ -34,8 +35,8 @@ def _rpc_call(tool: str, arguments: dict[str, Any]) -> dict[str, Any]:
     endpoint, token = _resolve_credentials()
     if not token:
         raise SpmHookError(
-            f"{TOKEN_ENV} is not configured and no token was found in "
-            "~/.spm/codex.env or ~/.spm/config.toml"
+            f"{TOKEN_ENV} is not configured and no browser-approved token was found in "
+            "~/.spm/codex.env"
         )
     body = json.dumps(
         {
@@ -77,10 +78,14 @@ def _resolve_credentials() -> tuple[str, str]:
         token = _token_from_codex_env(Path.home() / ".spm" / "codex.env")
 
     config = _spm_config(Path.home() / ".spm" / "config.toml")
-    if not token:
+    if not token and _truthy(os.environ.get(CLI_TOKEN_OPT_IN_ENV)):
         token = str(config.get("token") or "").strip()
     endpoint = explicit_endpoint or _mcp_endpoint(str(config.get("api_url") or ""))
     return endpoint or DEFAULT_MCP_URL, token
+
+
+def _truthy(value: str | None) -> bool:
+    return (value or "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _token_from_codex_env(path: Path) -> str:
