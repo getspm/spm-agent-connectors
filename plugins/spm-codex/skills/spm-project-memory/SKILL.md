@@ -9,7 +9,7 @@ Use the `spm` MCP server as the durable project-memory authority for consequenti
 
 ## Operating Loop
 
-1. At task start, use `spm_agent_session_start` or the bundled lifecycle hook to establish one active project and inspect the authorized project catalog. If SPM returns `bootstrap_required`, call `spm_project_bootstrap_preview` with source-grounded context from the task and present its confirmation URL. The user chooses create, link or skip; never create project memory silently. For ordinary ambiguity among existing projects, ask the user instead of writing memory.
+1. At task start, use `spm_agent_session_start` or the bundled lifecycle hook to resume a confirmed project association or inspect SPM's conversational project prompt. Ask that prompt naturally in the user's language and accept an ordinary-language answer. Confirm, replace or skip a match only after that answer by calling `spm_agent_session_association_decide`. If SPM returns `bootstrap_required`, first ask whether the user wants a new project, an existing project or no durable memory. Call `spm_project_bootstrap_preview` only after the user chooses a new project; its URL is a secondary authenticated confirmation surface, not the conversation itself. Never create project memory silently.
 2. Call `spm_temporal_state` or `spm_temporal_context_pack` to understand current project memory for the active topic, context area and task.
 3. Surface `attention_briefing` returned at session start before continuing with the user's first request. Display is not acknowledgement; call `spm_attention_state_update` only after an explicit user instruction.
 4. If the task touches architecture, tests, security, auth, data, deployment, billing, customer-facing copy, external sharing or policy, call `spm_agent_preflight` before editing or executing.
@@ -50,6 +50,7 @@ The hosted `agent-core` connector currently exposes these core tools:
 
 - `spm_agent_action_report`
 - `spm_agent_session_get`
+- `spm_agent_session_association_decide`
 - `spm_agent_session_set_project`
 - `spm_agent_session_start`
 - `spm_attention_briefing`
@@ -68,6 +69,8 @@ The hosted `agent-core` connector currently exposes these core tools:
 - `spm_context_boundaries_list`
 - `spm_context_boundary_get`
 - `spm_context_boundary_pack`
+- `spm_connector_access_get`
+- `spm_connector_access_request`
 - `spm_cross_project_context_pack`
 - `spm_multi_project_context_pack`
 - `spm_project_resolve`
@@ -83,3 +86,7 @@ The hosted `agent-core` connector currently exposes these core tools:
 - `spm_trust_status`
 
 If the MCP server is unavailable, say so explicitly and continue without claiming that SPM has recorded or verified the work.
+
+`spm_connector_access_request` only creates an expiring proposal. Never tell the
+user that a conversational access change is active until a human has approved
+the proposal in the private SPM console.

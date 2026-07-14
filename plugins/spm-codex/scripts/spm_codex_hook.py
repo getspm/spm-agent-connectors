@@ -41,7 +41,9 @@ def _rpc_call(tool: str, arguments: dict[str, Any]) -> dict[str, Any]:
     body = json.dumps(
         {
             "jsonrpc": "2.0",
-            "id": hashlib.sha256(f"{tool}:{json.dumps(arguments, sort_keys=True)}".encode()).hexdigest()[:16],
+            "id": hashlib.sha256(
+                f"{tool}:{json.dumps(arguments, sort_keys=True)}".encode()
+            ).hexdigest()[:16],
             "method": "tools/call",
             "params": {"name": tool, "arguments": arguments},
         }
@@ -128,7 +130,11 @@ def _mcp_endpoint(api_url: str) -> str:
 
 def _plugin_data_dir() -> Path:
     configured = os.environ.get("PLUGIN_DATA") or os.environ.get("CLAUDE_PLUGIN_DATA")
-    path = Path(configured).expanduser() if configured else Path.home() / ".codex" / "spm-codex"
+    path = (
+        Path(configured).expanduser()
+        if configured
+        else Path.home() / ".codex" / "spm-codex"
+    )
     path.mkdir(parents=True, exist_ok=True)
     try:
         path.chmod(0o700)
@@ -172,7 +178,9 @@ def _log(event: dict[str, Any], *, status: str, detail: str) -> None:
     entry = {
         "event": str(event.get("hook_event_name") or "unknown"),
         "session_hash": _session_key(event)[:16],
-        "turn_hash": hashlib.sha256(str(event.get("turn_id") or "").encode()).hexdigest()[:16],
+        "turn_hash": hashlib.sha256(
+            str(event.get("turn_id") or "").encode()
+        ).hexdigest()[:16],
         "status": status,
         "detail": detail[:1000],
     }
@@ -181,7 +189,9 @@ def _log(event: dict[str, Any], *, status: str, detail: str) -> None:
         handle.write(json.dumps(entry, sort_keys=True) + "\n")
 
 
-def _start_or_resume(event: dict[str, Any], state: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+def _start_or_resume(
+    event: dict[str, Any], state: dict[str, Any]
+) -> tuple[dict[str, Any], dict[str, Any]]:
     existing_id = state.get("spm_session_id")
     if existing_id:
         try:
@@ -232,6 +242,7 @@ def _start_or_resume(event: dict[str, Any], state: dict[str, Any]) -> tuple[dict
 def _project_context(session: dict[str, Any]) -> str:
     active = session.get("active_project") or {}
     projects = session.get("accessible_projects") or []
+    association = session.get("project_association") or {}
     if active:
         context = (
             f"SPM agent memory is active for project '{active.get('name')}' "
@@ -240,18 +251,73 @@ def _project_context(session: dict[str, Any]) -> str:
         )
         attention = _attention_context(session.get("attention_briefing"))
         return f"{context}\n\n{attention}" if attention else context
-    if session.get("bootstrap") or session.get("resolution_status") == "bootstrap_required":
+    if association.get("user_prompt") or association.get("status") in {
+        "proposed",
+        "requires_selection",
+        "external_context_only",
+    }:
+        return _association_conversation_context(association)
+    if association.get("status") == "skipped":
         return (
-            "SPM found no reliable project-memory match for this work. Call "
-            "spm_project_bootstrap_preview with source-grounded context from this task, then present "
-            "the returned confirmation URL. The user decides whether to create project memory, link "
-            "an existing project, or continue without durable memory. Do not claim persistence before confirmation."
+            "The user chose to continue this Codex task without durable SPM project memory. "
+            "Do not claim persistence. The user may explicitly select a project later."
         )
+    if session.get("bootstrap"):
+        return _association_conversation_context(association)
     names = ", ".join(str(project.get("name")) for project in projects[:12]) or "none"
     return (
-        "SPM did not select a project because the workspace is ambiguous. "
-        f"Authorized projects: {names}. Ask the user to select an existing project before claiming "
-        "that durable memory was stored."
+        "SPM cannot safely select one project for this task yet. "
+        f"Authorized projects: {names}. Ask the user once to choose a project, list the full catalog, "
+        "or continue without durable memory. Persist the answer with "
+        "spm_agent_session_association_decide before claiming that memory was stored."
+    )
+
+
+def _association_conversation_context(association: dict[str, Any]) -> str:
+    prompt = str(
+        association.get("user_prompt") or association.get("message") or ""
+    ).strip()
+    mappings = []
+    for option in association.get("reply_options") or []:
+        label = str(option.get("label") or option.get("intent") or "option")
+        tool = str(option.get("tool") or "").strip()
+        mappings.append(f"{label} -> {tool}" if tool else label)
+    return (
+        "SPM needs one project-memory decision. In the next user-facing response, ask this "
+        "question directly and naturally in the user's language; do not turn it into a status "
+        "note and do not show a bare confirmation URL:\n"
+        f"{prompt}\n"
+        "Interpret the answer semantically rather than by string matching. Intent mappings: "
+        f"{'; '.join(mappings) or 'select or skip the association'}. If the user chooses a new "
+        "project, call spm_project_bootstrap_preview with source-grounded context only then, and "
+        "use its private URL solely for authenticated confirmation. Continue the requested work "
+        "when safe, but never claim durable persistence before confirmation."
+    )
+
+
+def _association_prompt_signature(session: dict[str, Any]) -> str:
+    association = session.get("project_association") or {}
+    proposed = association.get("proposed_project") or {}
+    value = {
+        "status": association.get("status") or session.get("resolution_status"),
+        "project_id": proposed.get("id"),
+        "resolution_hash": association.get("resolution_hash"),
+    }
+    return hashlib.sha256(json.dumps(value, sort_keys=True).encode("utf-8")).hexdigest()
+
+
+def _mark_association_prompted(
+    event: dict[str, Any],
+    state: dict[str, Any],
+    session: dict[str, Any],
+) -> None:
+    state["association_prompt_signature"] = _association_prompt_signature(session)
+    _write_state(event, state)
+
+
+def _association_prompt_is_new(state: dict[str, Any], session: dict[str, Any]) -> bool:
+    return state.get("association_prompt_signature") != _association_prompt_signature(
+        session
     )
 
 
@@ -272,7 +338,9 @@ def _attention_context(briefing: Any) -> str:
         suffix = f" — {why_now}" if why_now else ""
         lines.append(f"- {item['title']}{suffix}")
     if len(list(briefing.get("items") or [])) > 3:
-        lines.append("- Additional pending communications are available through spm_attention_briefing.")
+        lines.append(
+            "- Additional pending communications are available through spm_attention_briefing."
+        )
     lines.append(
         "Use spm_attention_state_update only after an explicit user instruction to acknowledge, "
         "defer, resolve or dismiss a receipt."
@@ -332,7 +400,9 @@ def _transcript_turn(event: dict[str, Any], role: str) -> str | None:
 
 def _message_text(item: dict[str, Any], role: str) -> str | None:
     payload = item.get("payload") if isinstance(item.get("payload"), dict) else item
-    if payload.get("type") == "response_item" and isinstance(payload.get("payload"), dict):
+    if payload.get("type") == "response_item" and isinstance(
+        payload.get("payload"), dict
+    ):
         payload = payload["payload"]
     if payload.get("role") != role:
         return None
@@ -351,7 +421,9 @@ def _message_text(item: dict[str, Any], role: str) -> str | None:
     return "\n".join(texts) or None
 
 
-def _ingest(event: dict[str, Any], state: dict[str, Any], *, role: str) -> dict[str, Any] | None:
+def _ingest(
+    event: dict[str, Any], state: dict[str, Any], *, role: str
+) -> dict[str, Any] | None:
     content = _direct_turn_text(event, role) or _transcript_turn(event, role)
     if not content:
         return None
@@ -384,6 +456,7 @@ def handle(event: dict[str, Any]) -> None:
     session, state = _start_or_resume(event, state)
     if event_name == "SessionStart":
         _log(event, status="ready", detail=session.get("resolution_status", "unknown"))
+        _mark_association_prompted(event, state, session)
         _hook_output(event_name, _project_context(session))
         return
     if event_name == "UserPromptSubmit":
@@ -391,16 +464,34 @@ def handle(event: dict[str, Any]) -> None:
         if result and result.get("status") in {
             "requires_project_confirmation",
             "bootstrap_required",
+            "not_linked",
         }:
-            context = _project_context(result.get("session") or session)
-            _log(event, status="requires_project_confirmation", detail=context)
-            _hook_output(event_name, context)
+            current_session = result.get("session") or session
+            context = _project_context(current_session)
+            if _association_prompt_is_new(state, current_session):
+                _mark_association_prompted(event, state, current_session)
+                _log(event, status="requires_project_confirmation", detail=context)
+                _hook_output(event_name, context)
+            else:
+                _log(
+                    event,
+                    status=result.get("status"),
+                    detail="association prompt already surfaced",
+                )
         else:
-            _log(event, status=(result or {}).get("status", "no_content"), detail="user turn")
+            _log(
+                event,
+                status=(result or {}).get("status", "no_content"),
+                detail="user turn",
+            )
         return
     if event_name == "Stop":
         result = _ingest(event, state, role="assistant")
-        _log(event, status=(result or {}).get("status", "no_content"), detail="assistant turn")
+        _log(
+            event,
+            status=(result or {}).get("status", "no_content"),
+            detail="assistant turn",
+        )
         return
     _log(event, status="ignored", detail=event_name)
 
