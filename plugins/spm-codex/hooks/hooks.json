@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$PLUGIN_ROOT/scripts/spm_codex_hook.py\"",
+            "command": "/bin/sh -c 'hook=\"${PLUGIN_ROOT:-}/scripts/spm_codex_hook.py\"; if [ ! -f \"$hook\" ]; then hook=\"$(find \"$HOME/.codex/plugins/cache\" -type f -path \"*/spm-codex/*/scripts/spm_codex_hook.py\" -print 2>/dev/null | sort | tail -n 1)\"; fi; if [ -z \"$hook\" ] || [ ! -f \"$hook\" ]; then data=\"$HOME/.codex/spm-codex\"; mkdir -p \"$data\"; printf \"%s\\n\" \"SPM hook unavailable: no installed runtime found\" >> \"$data/launcher.log\"; exit 0; fi; exec python3 \"$hook\"'",
             "statusMessage": "Connecting project memory",
             "timeout": 45
           }
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$PLUGIN_ROOT/scripts/spm_codex_hook.py\"",
+            "command": "/bin/sh -c 'hook=\"${PLUGIN_ROOT:-}/scripts/spm_codex_hook.py\"; if [ ! -f \"$hook\" ]; then hook=\"$(find \"$HOME/.codex/plugins/cache\" -type f -path \"*/spm-codex/*/scripts/spm_codex_hook.py\" -print 2>/dev/null | sort | tail -n 1)\"; fi; if [ -z \"$hook\" ] || [ ! -f \"$hook\" ]; then data=\"$HOME/.codex/spm-codex\"; mkdir -p \"$data\"; printf \"%s\\n\" \"SPM hook unavailable: no installed runtime found\" >> \"$data/launcher.log\"; exit 0; fi; exec python3 \"$hook\"'",
             "statusMessage": "Triaging project memory",
             "timeout": 75
           }
@@ -30,7 +30,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$PLUGIN_ROOT/scripts/spm_codex_hook.py\"",
+            "command": "/bin/sh -c 'hook=\"${PLUGIN_ROOT:-}/scripts/spm_codex_hook.py\"; if [ ! -f \"$hook\" ]; then hook=\"$(find \"$HOME/.codex/plugins/cache\" -type f -path \"*/spm-codex/*/scripts/spm_codex_hook.py\" -print 2>/dev/null | sort | tail -n 1)\"; fi; if [ -z \"$hook\" ] || [ ! -f \"$hook\" ]; then data=\"$HOME/.codex/spm-codex\"; mkdir -p \"$data\"; printf \"%s\\n\" \"SPM hook unavailable: no installed runtime found\" >> \"$data/launcher.log\"; exit 0; fi; exec python3 \"$hook\"'",
             "statusMessage": "Recording project outcome",
             "timeout": 75
           }
