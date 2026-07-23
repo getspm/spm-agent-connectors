@@ -839,7 +839,6 @@ def _prompt_receipt_facts(
 
     memory_outcomes = {
         "applied": "project_memory_updated",
-        "analysis_pending": "project_memory_analysis_scheduled",
         SMART_PROMOTION_PENDING_REVIEW: "memory_saved_without_automatic_promotion",
         "triage_failed": "smart_memory_classification_not_completed",
         "metadata_only": "source_saved_as_evidence",
@@ -848,16 +847,18 @@ def _prompt_receipt_facts(
     receipt_hash = _short_identifier(
         receipt.get("entry_hash") or receipt.get("decision_hash")
     )
-    return {
+    facts = {
         "turns": 1,
         "journal_outcome": journal_outcome,
-        "memory_outcome": memory_outcomes.get(
-            persistence_status, "memory_saved_without_automatic_promotion"
-        ),
         "project_name": receipt.get("project_name"),
         "temporal_layer": receipt.get("temporal_layer"),
         "hash": receipt_hash,
     }
+    if persistence_status != "analysis_pending":
+        facts["memory_outcome"] = memory_outcomes.get(
+            persistence_status, "memory_saved_without_automatic_promotion"
+        )
+    return facts
 
 
 def _response_receipt_contract(facts: dict[str, Any]) -> str:
@@ -921,30 +922,31 @@ def _receipt_memory_outcome(
     persistence: list[str],
     receipts: list[dict[str, Any]],
     language: str,
-) -> str:
+) -> str | None:
+    completed_receipts = [
+        item
+        for item in receipts
+        if str(item.get("persistence_status") or "") != "analysis_pending"
+    ]
+    if not completed_receipts:
+        return None
     explicit_message = next(
         (
             str(item["memory_message"]).strip()
-            for item in reversed(receipts)
+            for item in reversed(completed_receipts)
             if str(item.get("memory_message") or "").strip()
         ),
         None,
     )
     if explicit_message:
         return explicit_message
+    persistence = [value for value in persistence if value != "analysis_pending"]
     if "triage_failed" in persistence:
         return _localized_receipt_text(
             language,
             en="smart memory classification not completed",
             es="clasificación inteligente de memoria no completada",
             ca="classificació intel·ligent de memòria no completada",
-        )
-    if "analysis_pending" in persistence:
-        return _localized_receipt_text(
-            language,
-            en="project-memory analysis scheduled",
-            es="análisis de memoria del proyecto programado",
-            ca="anàlisi de memòria del projecte programada",
         )
     if SMART_PROMOTION_PENDING_REVIEW in persistence:
         return _localized_receipt_text(
@@ -1069,8 +1071,9 @@ def _receipt_summary(mode: str, receipts: list[dict[str, Any]]) -> str | None:
             "SPM",
             f"{len(receipts)} {turn_label}",
             journal_outcome,
-            memory_outcome,
         ]
+        if memory_outcome:
+            parts.append(memory_outcome)
         if project_name:
             parts.append(project_name)
         if rendered_layers:
@@ -1094,15 +1097,14 @@ def _receipt_summary(mode: str, receipts: list[dict[str, Any]]) -> str | None:
         if item_persistence == "pending_review":
             item_persistence = SMART_PROMOTION_PENDING_REVIEW
         item_memory_message = str(item.get("memory_message") or "").strip()
-        fields = [
-            str(item.get("role") or "turn"),
-            item_memory_message
-            or _receipt_memory_outcome(
-                [item_persistence],
-                [item],
-                _language_code(item.get("display_language")),
-            ),
-        ]
+        fields = [str(item.get("role") or "turn")]
+        item_memory_outcome = item_memory_message or _receipt_memory_outcome(
+            [item_persistence],
+            [item],
+            _language_code(item.get("display_language")),
+        )
+        if item_memory_outcome:
+            fields.append(item_memory_outcome)
         if item.get("temporal_layer"):
             fields.append(
                 _localized_temporal_layer(
