@@ -215,6 +215,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--token-env-var", default=DEFAULT_TOKEN_ENV_VAR)
     parser.add_argument("--profile", default="agent-core")
     parser.add_argument("--topic", default="spm-connector-smoke")
+    parser.add_argument(
+        "--project-id",
+        default=os.getenv("SPM_SMOKE_PROJECT_ID", "").strip(),
+        help=(
+            "Explicit authorized project id used for the write smoke. "
+            "Set SPM_SMOKE_PROJECT_ID to avoid passing it on the command line."
+        ),
+    )
     parser.add_argument("--timeout", type=int, default=30)
     parser.add_argument("--read-only", action="store_true", help="Skip mutating event/preflight/action-report checks.")
     parser.add_argument("--json", action="store_true", help="Print machine-readable output.")
@@ -277,6 +285,39 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     run_id = dt.datetime.now(dt.UTC).strftime("%Y%m%dT%H%M%SZ")
     run_tag = f"spm-smoke-{run_id}"
     selected_tags = ["spm-smoke", run_tag]
+    project_id = str(args.project_id or "").strip()
+    if not project_id:
+        report["errors"].append(
+            "--project-id or SPM_SMOKE_PROJECT_ID is required for a project-scoped functional smoke"
+        )
+        return report
+
+    session_start = call_tool(
+        args.endpoint,
+        profile=args.profile,
+        token=token,
+        name="spm_agent_session_start",
+        arguments={
+            "client_kind": "spm-public-smoke",
+            "external_session_id": f"public-connector-smoke-{run_id}",
+            "project_id": project_id,
+            "prompt": "Run the public connector functional smoke in the explicitly selected project.",
+            "include_projects": False,
+            "include_attention_briefing": False,
+        },
+        request_id=3,
+        timeout=args.timeout,
+    )
+    session_id = assert_non_empty_string(session_start.get("id"), "session.id")
+    active_project = session_start.get("active_project")
+    if not isinstance(active_project, dict):
+        raise SmokeFailure("session start did not confirm the explicitly selected project")
+    active_project_id = assert_non_empty_string(active_project.get("id"), "active_project.id")
+    if active_project_id != project_id:
+        raise SmokeFailure("session start selected a project other than --project-id")
+    report["artifacts"]["session_id"] = session_id
+    report["artifacts"]["project_id"] = active_project_id
+    report["checks"].append("spm_agent_session_start")
 
     event_id: str | None = None
     event_hash: str | None = None
@@ -301,9 +342,10 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
                 "authority_weight": 0.8,
                 "context_area": "connector-validation",
                 "actor_role": "automation",
+                "project_id": project_id,
                 "metadata": {"run_id": run_id, "source": "public-connector-smoke"},
             },
-            request_id=3,
+            request_id=4,
             timeout=args.timeout,
         )
         event_id = assert_non_empty_string(event.get("id"), "event.id")
@@ -326,8 +368,9 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             "authority_mode": "advisory",
             "context_area": "connector-validation",
             "actor_role": "automation",
+            "project_id": project_id,
         },
-        request_id=4,
+        request_id=5,
         timeout=args.timeout,
     )
     assert_non_empty_string(state.get("report_hash"), "state.report_hash")
@@ -353,9 +396,10 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             "authority_mode": "advisory",
             "context_area": "connector-validation",
             "actor_role": "automation",
+            "project_id": project_id,
             "metadata": {"run_id": run_id, "source": "public-connector-smoke"},
         },
-        request_id=5,
+        request_id=6,
         timeout=args.timeout,
     )
     assert_kind(pack, "spm.temporal_context_pack", "context pack")
@@ -374,9 +418,10 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         name="spm_temporal_context_pack_verify",
         arguments={
             "pack": pack,
+            "project_id": project_id,
             "metadata": {"run_id": run_id, "source": "public-connector-smoke"},
         },
-        request_id=6,
+        request_id=7,
         timeout=args.timeout,
     )
     assert_kind(verification, "spm.temporal_context_pack_verification", "context pack verification")
@@ -401,9 +446,10 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             "authority_mode": "advisory",
             "context_area": "connector-validation",
             "actor_role": "automation",
+            "project_id": project_id,
             "metadata": {"run_id": run_id, "source": "public-connector-smoke"},
         },
-        request_id=7,
+        request_id=8,
         timeout=args.timeout,
     )
     assert_kind(graph, "spm.temporal_graph_query", "graph query")
@@ -450,9 +496,10 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
                 "include_hardening_context_pack": True,
                 "include_temporal_context": True,
                 "persist": True,
+                "project_id": project_id,
                 "metadata": {"run_id": run_id, "source": "public-connector-smoke"},
             },
-            request_id=8,
+            request_id=9,
             timeout=args.timeout,
         )
         assert_kind(preflight, "spm.agent_preflight", "agent preflight")
@@ -494,6 +541,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             "preflight_hash": preflight_hash,
             "evaluation_hash": evaluation_hash,
             "create_temporal_event": True,
+            "project_id": project_id,
             "metadata": {"run_id": run_id, "source": "public-connector-smoke"},
         }
         for key in ("action_id", "preflight_id"):
@@ -505,7 +553,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             token=token,
             name="spm_agent_action_report",
             arguments=action_report_arguments,
-            request_id=9,
+            request_id=10,
             timeout=args.timeout,
         )
         assert_kind(action_report, "spm.agent_action_report", "action report")

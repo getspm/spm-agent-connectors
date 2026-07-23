@@ -61,8 +61,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--mcp-endpoint", help="Alternative full MCP endpoint; /v1/mcp is stripped to derive API base URL.")
     parser.add_argument(
         "--project-id",
-        required=True,
-        help="SPM project used as the authorization anchor.",
+        help="Optional SPM authorization anchor. Omit it to choose after browser sign-in.",
     )
     parser.add_argument(
         "--access-mode",
@@ -71,9 +70,50 @@ def parse_args() -> argparse.Namespace:
         help="Authorize one project, a selected project/mount set, or all authorized organization projects.",
     )
     parser.add_argument("--allowed-project-id", action="append", type=uuid.UUID, default=[])
+    parser.add_argument(
+        "--external-access-mode",
+        choices=("none", "selected", "all_authorized"),
+        default="all_authorized",
+        help="Authorize no external projects, selected governed mounts, or every authorized mount.",
+    )
     parser.add_argument("--allowed-external-mount-id", action="append", type=uuid.UUID, default=[])
     parser.add_argument("--client-name", default="Codex")
     parser.add_argument("--scope", action="append", dest="scopes", help="Requested scope. Can be repeated.")
+    parser.add_argument(
+        "--capture-mode",
+        choices=("selective", "complete", "summaries_only", "metadata_only"),
+        default="selective",
+    )
+    parser.add_argument("--retention-days", type=int, default=90)
+    parser.add_argument("--include-user-turns", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--include-assistant-turns", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--review-threshold", type=float, default=0.62)
+    parser.add_argument("--auto-apply-threshold", type=float, default=0.78)
+    parser.add_argument("--attention-briefing", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument(
+        "--attention-mode",
+        choices=("critical", "actionable", "relevant", "all", "off"),
+        default="relevant",
+    )
+    parser.add_argument("--attention-limit", type=int, default=8)
+    parser.add_argument(
+        "--memory-receipt-mode",
+        choices=("discreet", "compact", "audit"),
+        default="compact",
+        help="Show no normal receipt, one compact receipt, or full integrity evidence after each iteration.",
+    )
+    parser.add_argument(
+        "--project-association-mode",
+        choices=("confirm_first", "auto_high_confidence", "manual"),
+        default="confirm_first",
+    )
+    parser.add_argument("--project-auto-match-threshold", type=float, default=0.93)
+    parser.add_argument("--project-candidate-limit", type=int, default=3)
+    parser.add_argument(
+        "--new-project-suggestions",
+        choices=("explicit", "disabled"),
+        default="explicit",
+    )
     parser.add_argument("--token-env-var", default=DEFAULT_TOKEN_ENV_VAR)
     parser.add_argument("--write-env", type=Path, help="Write shell export to this file with mode 0600.")
     parser.add_argument("--print-export", action="store_true", help="Print an export command containing the token.")
@@ -85,11 +125,27 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    if args.access_mode != "project_set" and (
-        args.allowed_project_id or args.allowed_external_mount_id
-    ):
+    if args.access_mode != "organization" and not args.project_id:
         print(
-            "Selected project and mount ids require --access-mode project_set.",
+            "--project-id is required for project and project_set authorization.",
+            file=sys.stderr,
+        )
+        raise SystemExit(2)
+    if args.access_mode != "project_set" and args.allowed_project_id:
+        print(
+            "Selected local project ids require --access-mode project_set.",
+            file=sys.stderr,
+        )
+        raise SystemExit(2)
+    if args.external_access_mode != "selected" and args.allowed_external_mount_id:
+        print(
+            "Selected external mount ids require --external-access-mode selected.",
+            file=sys.stderr,
+        )
+        raise SystemExit(2)
+    if args.external_access_mode == "selected" and not args.allowed_external_mount_id:
+        print(
+            "--external-access-mode selected requires at least one --allowed-external-mount-id.",
             file=sys.stderr,
         )
         raise SystemExit(2)
@@ -99,14 +155,37 @@ def main() -> None:
     code = post_json(
         code_url,
         {
-            "project_id": args.project_id,
+            "project_id": args.project_id or None,
             "access_mode": args.access_mode,
             "allowed_project_ids": [str(value) for value in args.allowed_project_id],
+            "external_access_mode": args.external_access_mode,
             "allowed_external_mount_ids": [
                 str(value) for value in args.allowed_external_mount_id
             ],
             "client_name": args.client_name,
             "scopes": args.scopes,
+            "connector_config": {
+                "capture": {
+                    "capture_mode": args.capture_mode,
+                    "retention_days": args.retention_days,
+                    "include_user_turns": args.include_user_turns,
+                    "include_assistant_turns": args.include_assistant_turns,
+                    "review_threshold": args.review_threshold,
+                    "auto_apply_threshold": args.auto_apply_threshold,
+                    "enabled": True,
+                },
+                "include_attention_briefing": args.attention_briefing,
+                "attention_mode": args.attention_mode,
+                "attention_limit": args.attention_limit,
+                "memory_receipt_mode": args.memory_receipt_mode,
+                "memory_receipt_mode_explicit": "--memory-receipt-mode" in sys.argv,
+                "project_association": {
+                    "mode": args.project_association_mode,
+                    "auto_match_threshold": args.project_auto_match_threshold,
+                    "candidate_limit": args.project_candidate_limit,
+                    "new_project_suggestions": args.new_project_suggestions,
+                },
+            },
         },
     )
     print("SPM Codex authorization requested.")

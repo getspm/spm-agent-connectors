@@ -132,10 +132,12 @@ python3 plugins/spm-codex/scripts/doctor_spm_codex.py
 Run the functional remote MCP smoke:
 
 ```bash
-python3 plugins/spm-codex/scripts/smoke_spm_remote_mcp.py
+python3 plugins/spm-codex/scripts/smoke_spm_remote_mcp.py \
+  --project-id <authorized-project-id>
 ```
 
-The smoke uses the same `SPM_CODEX_MCP_TOKEN` as Codex. It initializes the
+The smoke uses the same `SPM_CODEX_MCP_TOKEN` as Codex and requires an
+explicit authorized project id (or `SPM_SMOKE_PROJECT_ID`). It initializes the
 hosted MCP endpoint, verifies the project-resolution, multi-project,
 agent-session and memory tool surface, creates a small project-scoped smoke
 memory event, reads temporal state, creates and verifies a context pack, queries
@@ -146,7 +148,8 @@ returned context.
 For a non-mutating token check, use:
 
 ```bash
-python3 plugins/spm-codex/scripts/smoke_spm_remote_mcp.py --read-only
+python3 plugins/spm-codex/scripts/smoke_spm_remote_mcp.py \
+  --project-id <authorized-project-id> --read-only
 ```
 
 ## Claude Code, Cursor And OpenClaw

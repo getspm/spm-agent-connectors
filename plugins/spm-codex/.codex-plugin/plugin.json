@@ -1,6 +1,6 @@
 {
   "name": "spm-codex",
-  "version": "0.1.0+codex.20260712165806",
+  "version": "0.1.0+codex.20260723065448",
   "description": "Connect Codex to Structured Project Memory through the hosted SPM MCP endpoint.",
   "author": {
     "name": "Manna Digital Consulting, S.L.",
@@ -10,7 +10,7 @@
   "interface": {
     "displayName": "SPM for Codex",
     "shortDescription": "Automatic, multi-project memory for Codex through SPM.",
-    "longDescription": "SPM for Codex maintains durable project memory throughout the Codex task lifecycle. Hooks submit user and assistant turns under a configurable capture policy, while LLM-first triage derives relevant temporal memory with automatic provenance. The hosted MCP endpoint provides capture verification, temporal state, context packs, context boundaries, graph query, active-project resolution, explicit cross-project composition, trust status, preflight and post-action reports. Browser-approved tokens can be limited to one project or authorized organization projects; each conversation keeps one active project and never mixes another project unless the user explicitly requests it.",
+    "longDescription": "SPM for Codex maintains persistent project memory throughout the Codex task lifecycle. Hooks submit user and assistant turns under a configurable capture policy, while LLM-first triage derives relevant temporal memory with automatic provenance. The hosted MCP endpoint provides capture verification, temporal state, context packs, context boundaries, graph query, active-project resolution, explicit cross-project composition, trust status, preflight and post-action reports. Browser-approved tokens can be limited to one project or authorized organization projects; each conversation keeps one active project and never mixes another project unless the user explicitly requests it.",
     "developerName": "Manna Digital Consulting, S.L.",
     "category": "Productivity",
     "websiteURL": "https://getspm.com",
@@ -33,7 +33,7 @@
       "Agent hardening"
     ],
     "defaultPrompt": [
-      "Work on this project with its durable memory, constraints, risks and decisions in scope.",
+      "Work on this project with its persistent memory, constraints, risks and decisions in scope.",
       "Use authorized cross-project context only if I explicitly ask for it.",
       "Review this change against temporal memory, authority, tests and release risk."
     ]

@@ -13,6 +13,14 @@ assert SPEC is not None and SPEC.loader is not None
 SMOKE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(SMOKE)
 
+FRESH_INSTALL_PATH = ROOT / "scripts" / "smoke_fresh_codex_install.py"
+FRESH_INSTALL_SPEC = importlib.util.spec_from_file_location(
+    "spm_fresh_codex_install", FRESH_INSTALL_PATH
+)
+assert FRESH_INSTALL_SPEC is not None and FRESH_INSTALL_SPEC.loader is not None
+FRESH_INSTALL = importlib.util.module_from_spec(FRESH_INSTALL_SPEC)
+FRESH_INSTALL_SPEC.loader.exec_module(FRESH_INSTALL)
+
 
 class RemoteMetadataContractTests(unittest.TestCase):
     def metadata(self) -> dict[str, object]:
@@ -49,6 +57,13 @@ class RemoteMetadataContractTests(unittest.TestCase):
             "metadata security.cross_project_behavior expected 'explicit_request_required'",
             errors,
         )
+
+    def test_fresh_install_smoke_reads_the_public_plugin_version(self) -> None:
+        plugin_version = json.loads(
+            (ROOT / "plugins" / "spm-codex" / ".codex-plugin" / "plugin.json").read_text()
+        )["version"]
+
+        self.assertEqual(FRESH_INSTALL.expected_version(ROOT), plugin_version)
 
 
 if __name__ == "__main__":

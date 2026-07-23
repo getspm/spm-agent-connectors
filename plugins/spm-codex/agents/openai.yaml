@@ -3,4 +3,4 @@ interface:
   short_description: "Durable project memory for Codex agent work"
   icon_small: "./assets/spm-icon.svg"
   icon_large: "./assets/spm-logo.svg"
-  default_prompt: "Work on this project with durable memory, active-project scope, temporal validity and authorized cross-project context only when requested."
+  default_prompt: "Work on this project with persistent memory, active-project scope, temporal validity and authorized cross-project context only when requested."

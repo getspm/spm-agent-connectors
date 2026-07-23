@@ -70,13 +70,15 @@ Before submitting or updating a directory listing, run:
 python3 scripts/validate_public_connector.py
 mcp-publisher validate server.json
 python3 plugins/spm-codex/scripts/doctor_spm_codex.py --metadata-only
-python3 plugins/spm-codex/scripts/smoke_spm_remote_mcp.py
+python3 plugins/spm-codex/scripts/smoke_spm_remote_mcp.py \
+  --project-id <authorized-project-id>
 ```
 
 The first command verifies that this public repository remains connector-only.
 The second validates the Official MCP Registry descriptor. The third checks
-public MCP discovery metadata without credentials. The fourth requires a
-project-scoped `SPM_CODEX_MCP_TOKEN` and exercises real agent-facing MCP calls:
+public MCP discovery metadata without credentials. The fourth requires an
+authorized `SPM_CODEX_MCP_TOKEN` and an explicit project id; it exercises real
+agent-facing MCP calls:
 temporal state, context pack, verification, graph query, preflight and
 post-action report.
 
@@ -102,4 +104,4 @@ post-action report.
 - Security: https://getspm.com/security
 - Demo: https://getspm.com/sales/spm-current-scoped-trusted-agent-memory.mp4
 - Public connector repository: https://github.com/getspm/spm-agent-connectors
-- Public connector release: https://github.com/getspm/spm-agent-connectors/releases/tag/v0.2.2
+- Public connector release: https://github.com/getspm/spm-agent-connectors/releases/tag/v0.2.3

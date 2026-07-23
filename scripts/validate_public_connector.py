@@ -22,6 +22,7 @@ REQUIRED_FILES = [
     ROOT / "plugins" / "spm-codex" / "scripts" / "auth_spm_codex.py",
     ROOT / "plugins" / "spm-codex" / "scripts" / "doctor_spm_codex.py",
     ROOT / "plugins" / "spm-codex" / "scripts" / "smoke_spm_remote_mcp.py",
+    ROOT / "scripts" / "smoke_fresh_codex_install.py",
     ROOT / "plugins" / "spm-claude" / ".claude-plugin" / "plugin.json",
     ROOT / "plugins" / "spm-cursor" / ".cursor-plugin" / "plugin.json",
     ROOT / "plugins" / "spm-openclaw" / "hooks" / "spm-memory" / "handler.js",
@@ -114,7 +115,7 @@ def main() -> int:
     assert server["websiteUrl"] == "https://getspm.com"
     assert server["repository"]["url"] == "https://github.com/getspm/spm-agent-connectors"
     assert server["repository"]["source"] == "github"
-    assert server["version"] == "0.2.2"
+    assert server["version"] == "0.2.3"
     assert "packages" not in server
     assert server["remotes"][0]["type"] == "streamable-http"
     assert server["remotes"][0]["url"] == "https://getspm.com/v1/mcp"

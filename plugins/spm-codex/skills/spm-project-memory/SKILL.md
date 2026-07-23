@@ -1,19 +1,20 @@
 ---
 name: spm-project-memory
-description: Use SPM as durable project memory when Codex work involves requirements, architecture, testing, security, deployment, billing, privacy, context packs, temporal tension, agent handoff, governed sharing or post-action evidence.
+description: Use SPM as persistent project memory when Codex work involves requirements, architecture, testing, security, deployment, billing, privacy, context packs, temporal tension, agent handoff, governed sharing or post-action evidence.
 ---
 
 # SPM Project Memory for Codex
 
-Use the `spm` MCP server as the durable project-memory authority for consequential Codex work. The hosted connector defaults to the active project boundary, supports explicit project resolution and cross-project context packs when the user asks for them, and exposes SPM memory and hardening tools without billing, checkout or destructive admin operations.
+Use the `spm` MCP server as the persistent project-memory authority for consequential Codex work. The hosted connector defaults to the active project boundary, supports explicit project resolution and cross-project context packs when the user asks for them, and exposes SPM memory and hardening tools without billing, checkout or destructive admin operations.
 
 ## Operating Loop
 
-1. At task start, use `spm_agent_session_start` or the bundled lifecycle hook to establish one active project and inspect the authorized project catalog. If SPM returns `bootstrap_required`, call `spm_project_bootstrap_preview` with source-grounded context from the task and present its confirmation URL. The user chooses create, link or skip; never create project memory silently. For ordinary ambiguity among existing projects, ask the user instead of writing memory.
-2. Call `spm_temporal_state` or `spm_temporal_context_pack` to understand current project memory for the active topic, context area and task.
+1. At task start, use `spm_agent_session_start` or the bundled lifecycle hook to resume a confirmed project association or inspect SPM's conversational project prompt. Ask that prompt naturally in the user's language and accept an ordinary-language answer. Confirm, replace or skip a match only after that answer by calling `spm_agent_session_association_decide`. If SPM returns `bootstrap_required`, first ask whether the user wants a new project, an existing project or no persistent memory. Call `spm_project_bootstrap_preview` only after the user chooses a new project; its URL is a secondary authenticated confirmation surface, not the conversation itself. Never create project memory silently.
+2. Call `spm_memory_context_compose` for task-specific project context. Use `spm_temporal_state` or `spm_temporal_context_pack` when the task specifically needs temporal state, handoff or pack verification.
 3. Surface `attention_briefing` returned at session start before continuing with the user's first request. Display is not acknowledgement; call `spm_attention_state_update` only after an explicit user instruction.
 4. If the task touches architecture, tests, security, auth, data, deployment, billing, customer-facing copy, external sharing or policy, call `spm_agent_preflight` before editing or executing.
-5. Let the lifecycle hook submit user and assistant turns to `spm_agent_turn_ingest`. SPM applies the effective session/project/org capture policy before LLM-first triage decides what to store, update, relate, temporalize, promote or discard. Use `spm_memory_capture_policy_get` to inspect that policy and `spm_temporal_event_create` only for deliberate operator-authored events.
+5. Let the lifecycle hook submit user and assistant turns to `spm_agent_turn_ingest`. SPM applies the effective session/project/org capture policy before LLM-first triage decides what to store, update, relate, temporalize, promote or discard. If the prompt hook provides an input receipt contract, place that exact receipt at the very end of the normal user-facing response. Do not claim the final response is captured or invent a response hash: the `Stop` hook captures the exact final response and emits the completed-turn receipt. Use `spm_memory_capture_policy_get` to inspect that policy and `spm_temporal_event_create` only for deliberate operator-authored events.
+   The `Stop` hook also calls `spm_agent_work_bundle_finalize` to evaluate the already captured user request and final response together; it never creates a duplicate RAW transcript.
 6. For handoff or injection into another agent, call `spm_temporal_context_pack` or `spm_context_boundary_pack`, then verify the returned pack with `spm_temporal_context_pack_verify` before relying on it.
 7. For one external project, call `spm_cross_project_context_pack`; for several explicit sources, call `spm_multi_project_context_pack`. Do not pull memory from another project merely because it is available. Multi-project composition must preserve each source pack and hash instead of flattening memories.
 8. After meaningful work, call `spm_agent_action_report` with changed files, tests, decisions, pack hashes and evidence references.
@@ -50,6 +51,11 @@ The hosted `agent-core` connector currently exposes these core tools:
 
 - `spm_agent_action_report`
 - `spm_agent_session_get`
+- `spm_agent_session_association_decide`
+- `spm_agent_session_context_inject`
+- `spm_agent_session_context_revoke`
+- `spm_agent_session_receipt_status`
+- `spm_agent_session_receipt_delivery_report`
 - `spm_agent_session_set_project`
 - `spm_agent_session_start`
 - `spm_attention_briefing`
@@ -59,20 +65,26 @@ The hosted `agent-core` connector currently exposes these core tools:
 - `spm_attention_state_update`
 - `spm_attention_revoke`
 - `spm_agent_turn_ingest`
+- `spm_agent_work_bundle_finalize`
 - `spm_memory_capture_policy_get`
 - `spm_memory_capture_policy_set`
 - `spm_memory_capture_journal_list`
+- `spm_memory_capture_evidence`
 - `spm_memory_capture_journal_verify`
+- `spm_memory_context_compose`
 - `spm_agent_policy_pack`
 - `spm_agent_preflight`
 - `spm_context_boundaries_list`
 - `spm_context_boundary_get`
 - `spm_context_boundary_pack`
+- `spm_connector_access_get`
+- `spm_connector_access_request`
 - `spm_cross_project_context_pack`
 - `spm_multi_project_context_pack`
 - `spm_project_resolve`
 - `spm_project_bootstrap_preview`
 - `spm_project_bootstrap_status`
+- `spm_project_bootstrap_confirm`
 - `spm_projects_list`
 - `spm_temporal_context_pack`
 - `spm_temporal_context_pack_verify`
@@ -83,3 +95,7 @@ The hosted `agent-core` connector currently exposes these core tools:
 - `spm_trust_status`
 
 If the MCP server is unavailable, say so explicitly and continue without claiming that SPM has recorded or verified the work.
+
+`spm_connector_access_request` only creates an expiring proposal. Never tell the
+user that a conversational access change is active until a human has approved
+the proposal in the private SPM console.

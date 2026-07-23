@@ -212,7 +212,8 @@ python3 plugins/spm-codex/scripts/doctor_spm_codex.py --metadata-only
 For a full authenticated smoke, run:
 
 ```bash
-SPM_CODEX_MCP_TOKEN="<scoped-agent-token>" python3 plugins/spm-codex/scripts/smoke_spm_remote_mcp.py
+SPM_CODEX_MCP_TOKEN="<scoped-agent-token>" python3 plugins/spm-codex/scripts/smoke_spm_remote_mcp.py \
+  --project-id <authorized-project-id>
 ```
 
 The full smoke validates remote MCP initialization, tool discovery, temporal
