@@ -65,6 +65,13 @@ class RemoteMetadataContractTests(unittest.TestCase):
 
         self.assertEqual(FRESH_INSTALL.expected_version(ROOT), plugin_version)
 
+    def test_preflight_and_post_action_share_one_permission_contract(self) -> None:
+        self.assertEqual(
+            SMOKE.SMOKE_MCP_PERMISSIONS,
+            ("objects:read", "objects:write", "agent_hardening:write"),
+        )
+        self.assertEqual(SMOKE.EXPECTED_ACTION_REPORT_STATUS, "valid")
+
 
 if __name__ == "__main__":
     unittest.main()

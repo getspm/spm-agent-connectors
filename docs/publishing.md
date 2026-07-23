@@ -104,4 +104,4 @@ post-action report.
 - Security: https://getspm.com/security
 - Demo: https://getspm.com/sales/spm-current-scoped-trusted-agent-memory.mp4
 - Public connector repository: https://github.com/getspm/spm-agent-connectors
-- Public connector release: https://github.com/getspm/spm-agent-connectors/releases/tag/v0.2.3
+- Public connector release: https://github.com/getspm/spm-agent-connectors/releases/tag/v0.2.4

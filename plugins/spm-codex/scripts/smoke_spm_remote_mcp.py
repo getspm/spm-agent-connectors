@@ -46,7 +46,11 @@ FORBIDDEN_TOOL_FRAGMENTS = (
     "delete_project",
 )
 VALID_PREFLIGHT_DECISIONS = {"allow", "warn", "requires_approval", "block"}
-VALID_ACTION_REPORT_STATUSES = {"valid", "violations_opened", "incomplete", "blocked"}
+EXPECTED_ACTION_REPORT_STATUS = "valid"
+# The preflight and post-action report describe the same MCP operation. Keep the
+# declared and observed scopes coupled so the smoke cannot open a false-positive
+# permission violation by drifting between two literals.
+SMOKE_MCP_PERMISSIONS = ("objects:read", "objects:write", "agent_hardening:write")
 
 
 class SmokeFailure(RuntimeError):
@@ -470,7 +474,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             "target_refs": ["getspm/spm-agent-connectors"],
             "proposed_changes": {"none": True, "purpose": "smoke-test"},
             "files_touched": [],
-            "requested_permissions": ["objects:read", "objects:write", "agent_hardening:write"],
+            "requested_permissions": list(SMOKE_MCP_PERMISSIONS),
             "topics": [args.topic],
             "tags": selected_tags,
             "risk_level": "low",
@@ -507,8 +511,13 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             raise SmokeFailure(f"unexpected preflight decision: {preflight.get('decision')!r}")
         preflight_hash = assert_non_empty_string(preflight.get("preflight_hash"), "preflight.preflight_hash")
         evaluation_hash = assert_non_empty_string(preflight.get("evaluation_hash"), "preflight.evaluation_hash")
+        preflight_context_pack_hash = assert_non_empty_string(
+            preflight.get("context_pack_hash"),
+            "preflight.context_pack_hash",
+        )
         report["artifacts"]["preflight_hash"] = preflight_hash
         report["artifacts"]["evaluation_hash"] = evaluation_hash
+        report["artifacts"]["preflight_context_pack_hash"] = preflight_context_pack_hash
         if preflight.get("preflight_id"):
             report["artifacts"]["preflight_id"] = str(preflight["preflight_id"])
         if preflight.get("action_id"):
@@ -528,7 +537,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
                     "evidence_ref": f"spm-mcp-smoke:{run_id}",
                 }
             ],
-            "permissions_used": ["objects:read", "objects:write", "agent_hardening:write"],
+            "permissions_used": list(SMOKE_MCP_PERMISSIONS),
             "decisions": [
                 {
                     "title": "Public connector remote MCP smoke passed",
@@ -537,7 +546,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
                 }
             ],
             "evidence_refs": [f"spm-mcp-smoke:{run_id}"],
-            "context_pack_hash": pack_hash,
+            "context_pack_hash": preflight_context_pack_hash,
             "preflight_hash": preflight_hash,
             "evaluation_hash": evaluation_hash,
             "create_temporal_event": True,
@@ -557,8 +566,22 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             timeout=args.timeout,
         )
         assert_kind(action_report, "spm.agent_action_report", "action report")
-        if action_report.get("status") not in VALID_ACTION_REPORT_STATUSES:
-            raise SmokeFailure(f"unexpected action report status: {action_report.get('status')!r}")
+        violations = action_report.get("violations")
+        violation_types = sorted(
+            {
+                str(item.get("violation_type"))
+                for item in violations
+                if isinstance(item, dict) and item.get("violation_type")
+            }
+        ) if isinstance(violations, list) else []
+        report["artifacts"]["action_report_status"] = action_report.get("status")
+        report["artifacts"]["action_report_violation_types"] = violation_types
+        if action_report.get("status") != EXPECTED_ACTION_REPORT_STATUS:
+            raise SmokeFailure(
+                "action report must be valid; "
+                f"got {action_report.get('status')!r}"
+                + (f" ({', '.join(violation_types)})" if violation_types else "")
+            )
         report_hash = assert_non_empty_string(action_report.get("report_hash"), "action_report.report_hash")
         validation_hash = assert_non_empty_string(action_report.get("validation_hash"), "action_report.validation_hash")
         report["artifacts"]["action_report_hash"] = report_hash

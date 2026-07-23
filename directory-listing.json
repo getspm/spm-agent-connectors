@@ -12,7 +12,7 @@
   "security": "https://getspm.com/security",
   "demo_video": "https://getspm.com/sales/spm-current-scoped-trusted-agent-memory.mp4",
   "repository": "https://github.com/getspm/spm-agent-connectors",
-  "release": "https://github.com/getspm/spm-agent-connectors/releases/tag/v0.2.3",
+  "release": "https://github.com/getspm/spm-agent-connectors/releases/tag/v0.2.4",
   "authentication": {
     "required": true,
     "scheme": "bearer",
