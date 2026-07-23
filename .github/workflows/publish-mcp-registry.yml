@@ -1,0 +1,37 @@
+name: Publish MCP Registry
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out release source
+        uses: actions/checkout@v5
+
+      - name: Validate public descriptor
+        run: python3 scripts/validate_public_connector.py
+
+      - name: Install MCP publisher
+        run: |
+          curl -fsSL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" \
+            | tar -xz mcp-publisher
+
+      - name: Authenticate as getspm.com
+        env:
+          MCP_REGISTRY_HTTP_PRIVATE_KEY: ${{ secrets.MCP_REGISTRY_HTTP_PRIVATE_KEY }}
+        run: |
+          test -n "$MCP_REGISTRY_HTTP_PRIVATE_KEY"
+          ./mcp-publisher login http \
+            --domain getspm.com \
+            --private-key "$MCP_REGISTRY_HTTP_PRIVATE_KEY"
+
+      - name: Publish descriptor
+        run: ./mcp-publisher publish server.json

@@ -46,6 +46,25 @@ com.getspm/spm
 - Project-scoped.
 - Trial or paid plan required.
 
+## Registry Publication
+
+The official registry publication is automated by
+`.github/workflows/publish-mcp-registry.yml`. It runs for release tags and can
+also be started manually from GitHub Actions. The workflow uses the
+`getspm.com` HTTP-domain proof and a repository secret named
+`MCP_REGISTRY_HTTP_PRIVATE_KEY`; it does not depend on a developer's local
+registry JWT.
+
+The public verification record is served at:
+
+```text
+https://getspm.com/.well-known/mcp-registry-auth
+```
+
+For a local break-glass publication only, authenticate with the same
+domain-proof key and then run `mcp-publisher publish server.json`. Never commit
+or print that key.
+
 ## Directory Strategy
 
 Use the remote connector path first:
