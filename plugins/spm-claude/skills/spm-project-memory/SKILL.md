@@ -19,11 +19,14 @@ Surface project attention returned at session start before continuing with the f
 request. Display is not acknowledgement: update recipient state only after an explicit
 user instruction to acknowledge, defer, resolve or dismiss an item.
 
-If SPM returns `bootstrap_required`, prepare a source-grounded proposal with
-`spm_project_bootstrap_preview` and present its confirmation URL. The user decides
-whether to create project memory, link an existing project or continue without
-durable memory. Never create a project silently or claim persistence before the
-review is confirmed.
+When SPM returns a project-association `user_prompt`, ask it naturally in the
+user's language and interpret the answer semantically. A likely match can be
+confirmed, replaced or skipped; an ambiguous match can list candidates. For
+`bootstrap_required`, ask whether to prepare a new project, show existing projects
+or continue without durable memory. Call `spm_project_bootstrap_preview` only after
+the user chooses a new project. Its private URL is used solely for authenticated
+confirmation. Never replace the question with a status note or bare URL, create a
+project silently or claim persistence before confirmation.
 
 Do not store secrets, credentials, raw private tokens or unnecessary personal data.
 Use context packs for handoff and preserve project id, source, temporal assessment,
