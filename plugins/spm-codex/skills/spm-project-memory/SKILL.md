@@ -15,9 +15,10 @@ Use the `spm` MCP server as the persistent project-memory authority for conseque
 4. If the task touches architecture, tests, security, auth, data, deployment, billing, customer-facing copy, external sharing or policy, call `spm_agent_preflight` before editing or executing.
 5. Let the lifecycle hook submit user and assistant turns to `spm_agent_turn_ingest`. SPM applies the effective session/project/org capture policy before LLM-first triage decides what to store, update, relate, temporalize, promote or discard. If the prompt hook provides an input receipt contract, place that exact receipt at the very end of the normal user-facing response. Do not claim the final response is captured or invent a response hash: the `Stop` hook captures the exact final response and emits the completed-turn receipt. Use `spm_memory_capture_policy_get` to inspect that policy and `spm_temporal_event_create` only for deliberate operator-authored events.
    The `Stop` hook also calls `spm_agent_work_bundle_finalize` to evaluate the already captured user request and final response together; it never creates a duplicate RAW transcript.
-6. For handoff or injection into another agent, call `spm_temporal_context_pack` or `spm_context_boundary_pack`, then verify the returned pack with `spm_temporal_context_pack_verify` before relying on it.
-7. For one external project, call `spm_cross_project_context_pack`; for several explicit sources, call `spm_multi_project_context_pack`. Do not pull memory from another project merely because it is available. Multi-project composition must preserve each source pack and hash instead of flattening memories.
-8. After meaningful work, call `spm_agent_action_report` with changed files, tests, decisions, pack hashes and evidence references.
+6. Read the session's dynamic `source_capture_contract`. When an authorized file, document, repository snapshot, tool result or endpoint response materially informs work but is not represented in its governed source inventory, call `spm_agent_resource_handoff` with an approved redacted body or accurate summary. At work closure SPM evaluates source coverage against the shared project memory and may provide a specific follow-up capture instruction. Never imply SPM can inspect host files, hidden tool output or endpoints on its own. Use `spm_agent_resources_list` for body-free source provenance and versions.
+7. For handoff or injection into another agent, call `spm_temporal_context_pack` or `spm_context_boundary_pack`, then verify the returned pack with `spm_temporal_context_pack_verify` before relying on it.
+8. For one external project, call `spm_cross_project_context_pack`; for several explicit sources, call `spm_multi_project_context_pack`. Do not pull memory from another project merely because it is available. Multi-project composition must preserve each source pack and hash instead of flattening memories.
+9. After meaningful work, call `spm_agent_action_report` with changed files, tests, decisions, pack hashes and evidence references.
 
 ## Project Boundary Rules
 
@@ -65,6 +66,8 @@ The hosted `agent-core` connector currently exposes these core tools:
 - `spm_attention_state_update`
 - `spm_attention_revoke`
 - `spm_agent_turn_ingest`
+- `spm_agent_resource_handoff`
+- `spm_agent_resources_list`
 - `spm_agent_work_bundle_finalize`
 - `spm_memory_capture_policy_get`
 - `spm_memory_capture_policy_set`
@@ -95,6 +98,10 @@ The hosted `agent-core` connector currently exposes these core tools:
 - `spm_trust_status`
 
 If the MCP server is unavailable, say so explicitly and continue without claiming that SPM has recorded or verified the work.
+
+## Material Sources
+
+When an authorized file, specification, repository snapshot, tool result or endpoint response materially informs work, follow the dynamic session source-capture contract and submit a missing source explicitly through `spm_agent_resource_handoff`. Include a stable source reference, source kind and either a redacted body or an accurate summary. Identical content is reused canonically across sessions; a changed stable source becomes a linked version. This uses the same capture policy, hash-chain, temporal triage and sharing controls as normal turns. SPM does not silently inspect host files, hidden tool output or endpoints, and the caller must never hand off secrets or data outside the approved boundary.
 
 `spm_connector_access_request` only creates an expiring proposal. Never tell the
 user that a conversational access change is active until a human has approved

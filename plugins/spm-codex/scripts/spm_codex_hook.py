@@ -447,8 +447,32 @@ def _project_context(session: dict[str, Any]) -> str:
             f"({active.get('id')}). Keep ordinary recall and writes in this project. "
             "List or compose another authorized project only when the user explicitly asks."
         )
+        default_material_instruction = (
+            "If an authorized file, document, tool result, repository snapshot or endpoint response "
+            "materially informs the work and is not already represented in project memory, call "
+            "spm_agent_resource_handoff before the final response with its source reference, kind and "
+            "a redacted body or accurate summary. SPM cannot inspect arbitrary host files, hidden tool "
+            "output or endpoints itself. Do not hand off secrets or data outside the approved sharing scope."
+        )
+        source_contract = session.get("source_capture_contract") or {}
+        material_instruction = str(
+            source_contract.get("agent_instruction") or default_material_instruction
+        )
+        known_sources = list(source_contract.get("known_sources") or [])
+        if known_sources:
+            source_labels = [
+                str(item.get("title") or item.get("source_ref") or "material source")
+                for item in known_sources[:8]
+            ]
+            material_instruction += " Known governed sources: " + "; ".join(source_labels) + "."
+        user_question = str(source_contract.get("user_question") or "").strip()
+        if user_question:
+            material_instruction += " Ask the user only when needed: " + user_question
         attention = _attention_context(session.get("attention_briefing"))
-        return f"{context}\n\n{attention}" if attention else context
+        parts = [context, material_instruction]
+        if attention:
+            parts.append(attention)
+        return "\n\n".join(parts)
     if association.get("user_prompt") or association.get("status") in {
         "proposed",
         "requires_selection",
