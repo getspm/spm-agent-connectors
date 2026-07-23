@@ -37,7 +37,6 @@ REQUIRED_TOOLS = {
     "spm_multi_project_context_pack",
     "spm_project_bootstrap_preview",
     "spm_project_bootstrap_status",
-    "spm_project_bootstrap_confirm",
     "spm_project_resolve",
     "spm_projects_list",
     "spm_temporal_context_pack",
@@ -47,6 +46,11 @@ REQUIRED_TOOLS = {
     "spm_temporal_state",
     "spm_trust_remediation_plan",
     "spm_trust_status",
+}
+OPTIONAL_PRIVILEGED_TOOLS = {
+    # Confirmation can create project state and is intentionally absent from
+    # otherwise valid organization or project tokens without bootstrap scope.
+    "spm_project_bootstrap_confirm",
 }
 FORBIDDEN_TOOL_FRAGMENTS = (
     "billing",
@@ -152,6 +156,7 @@ def main() -> None:
         "token_present": False,
         "metadata_ok": False,
         "authenticated_ok": False,
+        "authenticated_optional_privileged_tools": [],
         "errors": [],
     }
     try:
@@ -179,6 +184,9 @@ def main() -> None:
                 missing = sorted(REQUIRED_TOOLS - tool_names)
                 if missing:
                     report["errors"].append(f"authenticated tools/list missing: {', '.join(missing)}")
+                report["authenticated_optional_privileged_tools"] = sorted(
+                    OPTIONAL_PRIVILEGED_TOOLS & tool_names
+                )
                 report["server"] = init.get("result", {}).get("serverInfo")
                 report["authenticated_tool_count"] = len(tool_names)
                 report["authenticated_ok"] = not missing
