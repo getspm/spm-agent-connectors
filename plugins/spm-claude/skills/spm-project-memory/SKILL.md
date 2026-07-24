@@ -30,7 +30,12 @@ confirmed, replaced or skipped; an ambiguous match can list candidates. For
 `bootstrap_required`, ask whether to create a new project, show existing projects
 or continue without persistent memory in SPM. Confirm, replace or skip a match only through
 `spm_agent_session_association_decide`. Call `spm_project_bootstrap_preview` only
-after the user chooses a new project. If the user then explicitly confirms create,
+after the user chooses a new project. Supply a safe inventory of authorized
+resources and source-grounded evidence from a bounded inspection. When the
+returned evidence assessment requests a specific missing source, inspect only
+that authorized source and call `spm_project_bootstrap_evidence_submit`; never
+crawl the workspace or use an absolute local path as shared project identity.
+If the user then explicitly confirms create,
 link or skip in the agent conversation and the connector has write permission, call
 `spm_project_bootstrap_confirm`; otherwise use the private URL solely for
 authenticated confirmation. Never replace the question with a status note or bare
@@ -39,10 +44,26 @@ URL, create a project silently or claim persistence before confirmation.
 Use `spm_agent_session_receipt_delivery_report` to record body-free connector
 evidence that the receipt instruction was supplied or completion was observed.
 Use `spm_agent_session_receipt_status` when the host drops or hides lifecycle
-status text. Use `spm_memory_capture_policy_get` to inspect that policy and
-`spm_memory_capture_evidence` for a body-free audit of capture state and
+status text. Use `spm_memory_capture_policy_get` before changing capture behavior.
+Use `spm_memory_capture_evidence` for a body-free audit of capture state and
 `spm_memory_context_compose` for governed task context before consequential
 work in a confirmed project.
+
+When the user wants to continue the same authorized work in another agent or
+device, use `spm_agent_session_continuation_create`. The receiving agent uses
+`spm_agent_session_continuation_accept`, and an unused handoff can be cancelled
+with `spm_agent_session_continuation_revoke`. The one-time token carries only
+project and injected-context references; SPM rechecks current authorization and
+never transfers memory bodies or credentials.
+
+Before creating a continuation, record body-free material state with
+`spm_agent_workspace_manifest_record`: Git identity, revision and local-state
+hash; a non-Git filesystem/document content snapshot; a remote version reference;
+or `memory_only`. The receiving agent must inspect what is actually available and
+include its manifest during acceptance. Follow the returned alignment result and
+ask the user before obtaining, replacing or reconciling resources. Never clone,
+pull, reset, overwrite or expose raw diffs automatically. Use
+`spm_agent_workspace_manifest_list` for authorized session or project history.
 
 Do not store secrets, credentials, raw private tokens or unnecessary personal data.
 Use context packs for handoff and preserve project id, source, temporal assessment,

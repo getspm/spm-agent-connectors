@@ -67,7 +67,14 @@ Connector profiles expose the agent-facing SPM surface:
 - inspect and verify an append-ordered capture journal without exposing retained
   conversation bodies to agent tools.
 - propose a source-grounded project-memory bootstrap when no authorized project
-  matches, then wait for the user to create, link or skip it in SPM.
+  matches, request only the specific authorized evidence still needed, then wait
+  for the user to create, link or skip it in SPM;
+- continue an authorized project in another agent or device through a
+  short-lived one-time handoff that carries references rather than memory bodies
+  or credentials;
+- compare body-free workspace manifests before a handoff: Git identity,
+  revision and local-state hash; non-Git file or document snapshots; remote
+  version references; or memory-only work.
 
 ## Typical Use Cases
 
@@ -175,6 +182,9 @@ Do not commit tokens. Prefer environment variables or each agent client's
 secret storage. Tokens must be explicitly scoped and revocable from SPM.
 Organization visibility does not permit silent project mixing: each task keeps
 one active project, while cross-project packs require an explicit user request.
+Session continuation does not clone, pull, reset or overwrite a workspace.
+Receiving agents inspect their actual material state, compare it with SPM's
+manifest and ask before obtaining or reconciling resources.
 
 See `SECURITY.md` and `docs/security-boundary.md`.
 

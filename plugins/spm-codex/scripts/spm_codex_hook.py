@@ -536,8 +536,12 @@ def _association_conversation_context(association: dict[str, Any]) -> str:
         "its calibrated confidence. Keep asking in later turns until the user confirms, rejects, selects, "
         "creates, or skips. A hook context being emitted is not a user-visible decision. Interpret the "
         "user's answer semantically, never with string matching. If the user chooses create, call "
-        "spm_project_bootstrap_preview with source-grounded context and use its private URL only for "
-        "authenticated confirmation. Never claim persistent project memory before confirmation.\n"
+        "spm_project_bootstrap_preview with a safe inventory and source-grounded evidence from a "
+        "bounded inspection. Follow a specific evidence_assessment.agent_instruction by inspecting "
+        "only authorized resources and calling spm_project_bootstrap_evidence_submit. Never crawl "
+        "the workspace, expose secrets, or use absolute local paths as shared identity. Use the "
+        "private URL only for authenticated confirmation. Never claim persistent project memory "
+        "before confirmation.\n"
         f"SPM association facts: {json.dumps(decision, sort_keys=True, ensure_ascii=True)}"
     )
 

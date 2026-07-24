@@ -115,7 +115,7 @@ def main() -> int:
     assert server["websiteUrl"] == "https://getspm.com"
     assert server["repository"]["url"] == "https://github.com/getspm/spm-agent-connectors"
     assert server["repository"]["source"] == "github"
-    assert server["version"] == "0.2.5"
+    assert server["version"] == "0.2.6"
     assert "packages" not in server
     assert server["remotes"][0]["type"] == "streamable-http"
     assert server["remotes"][0]["url"] == "https://getspm.com/v1/mcp"

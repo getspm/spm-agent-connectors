@@ -9,13 +9,13 @@ Use the `spm` MCP server as the persistent project-memory authority for conseque
 
 ## Operating Loop
 
-1. At task start, use `spm_agent_session_start` or the bundled lifecycle hook to resume a confirmed project association or inspect SPM's conversational project prompt. Ask that prompt naturally in the user's language and accept an ordinary-language answer. Confirm, replace or skip a match only after that answer by calling `spm_agent_session_association_decide`. If SPM returns `bootstrap_required`, first ask whether the user wants a new project, an existing project or no persistent memory. Call `spm_project_bootstrap_preview` only after the user chooses a new project; its URL is a secondary authenticated confirmation surface, not the conversation itself. Never create project memory silently.
+1. At task start, use `spm_agent_session_start` or the bundled lifecycle hook to resume a confirmed project association or inspect SPM's conversational project prompt. Ask that prompt naturally in the user's language and accept an ordinary-language answer. Confirm, replace or skip a match only after that answer by calling `spm_agent_session_association_decide`. If SPM returns `bootstrap_required`, first ask whether the user wants a new project, an existing project or no persistent memory. Call `spm_project_bootstrap_preview` only after the user chooses a new project. Supply a safe inventory of authorized project resources and source-grounded evidence from a bounded inspection. If `evidence_assessment.agent_instruction` requests specific missing evidence, inspect only those authorized resources and call `spm_project_bootstrap_evidence_submit`; do not crawl the workspace or treat local paths as project identity. Its URL is a secondary authenticated confirmation surface, not the conversation itself. Never create project memory silently.
 2. Call `spm_memory_context_compose` for task-specific project context. Use `spm_temporal_state` or `spm_temporal_context_pack` when the task specifically needs temporal state, handoff or pack verification.
 3. Surface `attention_briefing` returned at session start before continuing with the user's first request. Display is not acknowledgement; call `spm_attention_state_update` only after an explicit user instruction.
 4. If the task touches architecture, tests, security, auth, data, deployment, billing, customer-facing copy, external sharing or policy, call `spm_agent_preflight` before editing or executing.
 5. Let the lifecycle hook submit user and assistant turns to `spm_agent_turn_ingest`. SPM applies the effective session/project/org capture policy before LLM-first triage decides what to store, update, relate, temporalize, promote or discard. If the prompt hook provides an input receipt contract, place that exact receipt at the very end of the normal user-facing response. Do not claim the final response is captured or invent a response hash: the `Stop` hook captures the exact final response and emits the completed-turn receipt. Use `spm_memory_capture_policy_get` to inspect that policy and `spm_temporal_event_create` only for deliberate operator-authored events.
    The `Stop` hook also calls `spm_agent_work_bundle_finalize` to evaluate the already captured user request and final response together; it never creates a duplicate RAW transcript.
-6. Read the session's dynamic `source_capture_contract`. When an authorized file, document, repository snapshot, tool result or endpoint response materially informs work but is not represented in its governed source inventory, call `spm_agent_resource_handoff` with an approved redacted body or accurate summary. At work closure SPM evaluates source coverage against the shared project memory and may provide a specific follow-up capture instruction. Never imply SPM can inspect host files, hidden tool output or endpoints on its own. Use `spm_agent_resources_list` for body-free source provenance and versions.
+6. Read the session's dynamic `source_capture_contract`. When an authorized file, document, repository snapshot, tool result or endpoint response materially informed the work but is not represented in its governed source inventory, call `spm_agent_resource_handoff` with an approved redacted body or accurate summary. At work closure SPM evaluates source coverage against the shared project memory and may provide a specific follow-up capture instruction. Never imply SPM can inspect host files, hidden tool output or endpoints on its own. Use `spm_agent_resources_list` for body-free source provenance and versions.
 7. For handoff or injection into another agent, call `spm_temporal_context_pack` or `spm_context_boundary_pack`, then verify the returned pack with `spm_temporal_context_pack_verify` before relying on it.
 8. For one external project, call `spm_cross_project_context_pack`; for several explicit sources, call `spm_multi_project_context_pack`. Do not pull memory from another project merely because it is available. Multi-project composition must preserve each source pack and hash instead of flattening memories.
 9. After meaningful work, call `spm_agent_action_report` with changed files, tests, decisions, pack hashes and evidence references.
@@ -53,6 +53,11 @@ The hosted `agent-core` connector currently exposes these core tools:
 - `spm_agent_action_report`
 - `spm_agent_session_get`
 - `spm_agent_session_association_decide`
+- `spm_agent_session_continuation_create`
+- `spm_agent_session_continuation_accept`
+- `spm_agent_session_continuation_revoke`
+- `spm_agent_workspace_manifest_record`
+- `spm_agent_workspace_manifest_list`
 - `spm_agent_session_context_inject`
 - `spm_agent_session_context_revoke`
 - `spm_agent_session_receipt_status`
@@ -86,6 +91,7 @@ The hosted `agent-core` connector currently exposes these core tools:
 - `spm_multi_project_context_pack`
 - `spm_project_resolve`
 - `spm_project_bootstrap_preview`
+- `spm_project_bootstrap_evidence_submit`
 - `spm_project_bootstrap_status`
 - `spm_project_bootstrap_confirm`
 - `spm_projects_list`
@@ -98,6 +104,21 @@ The hosted `agent-core` connector currently exposes these core tools:
 - `spm_trust_status`
 
 If the MCP server is unavailable, say so explicitly and continue without claiming that SPM has recorded or verified the work.
+
+When the user wants to continue the same authorized work in another agent or
+device, create a short-lived one-time handoff with
+`spm_agent_session_continuation_create`. Before creating it, record the current
+material workspace with `spm_agent_workspace_manifest_record`: repository
+identity, revision and body-free local-state hash for Git; a body-free content
+snapshot for non-Git files or documents; or `memory_only` when no local material
+resource is required. The receiving agent inspects its authorized workspace and
+passes that manifest to `spm_agent_session_continuation_accept`; revoke an unused handoff with
+`spm_agent_session_continuation_revoke`. A continuation transfers project and
+injected-context references, never memory bodies or credentials, and SPM
+rechecks the receiving user's current authorization. Follow the returned
+workspace-alignment instruction. Never clone, pull, reset, overwrite or disclose
+local changes automatically. Use `spm_agent_workspace_manifest_list` when the
+user needs project-wide evidence from other connected sessions.
 
 ## Material Sources
 

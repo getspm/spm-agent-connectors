@@ -29,11 +29,31 @@ and map the user's ordinary-language answer to its structured reply options. For
 `bootstrap_required`, ask whether to create a new project, show existing projects
 or continue without persistent memory in SPM. Confirm, replace or skip a match through
 `spm_agent_session_association_decide`. Call `spm_project_bootstrap_preview` only
-after the user chooses a new project. If the user then explicitly confirms create,
+after the user chooses a new project. Include a safe authorized-resource
+inventory and source-grounded evidence from a bounded inspection. Follow a
+specific `evidence_assessment.agent_instruction` with
+`spm_project_bootstrap_evidence_submit`; never crawl unrelated resources or use
+machine-local paths as portable project identity. If the user then explicitly confirms create,
 link or skip in the agent conversation and the connector has write permission, call
 `spm_project_bootstrap_confirm`; otherwise use the private URL solely for
 authenticated confirmation. Do not replace the conversation with a bare URL,
 claim that project memory exists before confirmation or claim persistence during
 SPM unavailable states.
 
-Follow the dynamic session source-capture contract for an authorized file, specification, repository snapshot, tool result or endpoint response that materially informs work. Call `spm_agent_resource_handoff` for a missing source with a source reference, source kind and a redacted body or accurate summary. SPM checks source coverage at work closure, reuses identical evidence canonically and links a changed stable source as a version. Do not imply that SPM read host files, hidden tool output or endpoints automatically, and never hand off secrets or data outside the approved sharing boundary.
+When authorized work must continue in another agent or device, create a
+short-lived one-time handoff with `spm_agent_session_continuation_create`. The
+receiving agent accepts it with `spm_agent_session_continuation_accept`; cancel
+an unused handoff with `spm_agent_session_continuation_revoke`. Only project and
+injected-context references cross the handoff. SPM rechecks current
+authorization and does not transfer memory bodies or credentials.
+
+Before creating the handoff, call `spm_agent_workspace_manifest_record` with
+body-free evidence about required material resources: Git identity, revision and
+local-state hash; non-Git filesystem/document hashes; remote version references;
+or `memory_only`. The receiving agent inspects its available workspace, includes
+that manifest during acceptance and follows the returned alignment result. Never
+clone, pull, reset, overwrite or reveal raw diffs automatically. Use
+`spm_agent_workspace_manifest_list` to inspect authorized session or project
+history.
+
+Follow the dynamic session source-capture contract for an authorized file, specification, repository snapshot, tool result or endpoint response that materially informed work. Call `spm_agent_resource_handoff` for a missing source with a source reference, source kind and a redacted body or accurate summary. SPM checks source coverage at work closure, reuses identical evidence canonically and links a changed stable source as a version. Do not imply that SPM read host files, hidden tool output or endpoints automatically, and never hand off secrets or data outside the approved sharing boundary.

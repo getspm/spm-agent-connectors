@@ -8,7 +8,7 @@
     "url": "https://github.com/getspm/spm-agent-connectors",
     "source": "github"
   },
-  "version": "0.2.5",
+  "version": "0.2.6",
   "remotes": [
     {
       "type": "streamable-http",
@@ -52,7 +52,10 @@
         "explicit_multi_project_composition",
         "federated_project_mounts",
         "agent_lifecycle_triage",
-        "reviewable_project_memory_bootstrap"
+        "reviewable_project_memory_bootstrap",
+        "bounded_bootstrap_evidence",
+        "cross_agent_session_continuation",
+        "workspace_state_verification"
       ]
     }
   }

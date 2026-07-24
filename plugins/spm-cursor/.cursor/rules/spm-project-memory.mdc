@@ -8,14 +8,59 @@ authority, source evidence, agent handoff, security, testing, deployment and
 governed sharing. Resolve the active project before consequential work. Do not read
 or compose another authorized project unless the user explicitly requests it.
 
+Start or resume project memory with `spm_agent_session_start` when the runtime
+has not already done so. If SPM returns an association prompt, ask it naturally and
+persist the user's semantic confirm, replace or skip answer with
+`spm_agent_session_association_decide`. For a new project request, call
+`spm_project_bootstrap_preview` first. When its evidence assessment requests a
+bounded inspection, inspect only authorized project-defining resources and submit
+the redacted result with `spm_project_bootstrap_evidence_submit`. Call
+`spm_project_bootstrap_confirm` only after the evidence assessment permits
+confirmation and the user explicitly confirms the action.
+
 Use SPM context packs rather than copying whole projects between conversations.
 Preserve source project, temporal assessment, context boundary and verification
-hash. Never claim a durable write succeeded unless the SPM tool confirms it. Do not
-store secrets, raw credentials or unnecessary personal data.
+hash. Use `spm_agent_session_context_inject` and
+`spm_agent_session_context_revoke` only for explicit context composition. Use
+`spm_cross_project_context_pack` for one explicit source project and
+`spm_multi_project_context_pack` for several explicit sources, preserving source
+packs and hashes. Never claim a durable write succeeded unless the SPM tool
+confirms it. If SPM unavailable status is returned, say so plainly and continue
+without claiming persistence. Do not store secrets, raw credentials or
+unnecessary personal data.
+
+When the user wants to continue the same authorized work in another agent or
+device, use `spm_agent_session_continuation_create`. The receiving agent accepts
+the one-time token with `spm_agent_session_continuation_accept`; revoke an unused
+handoff with `spm_agent_session_continuation_revoke`. Continuations carry only
+project and injected-context references. SPM rechecks current authorization and
+never transfers memory bodies or credentials.
+
+Record a body-free workspace manifest with `spm_agent_workspace_manifest_record`
+before creating the continuation. For Git, report stable repository identity,
+revision and a hash/count summary of local changes; for non-Git work, report a
+filesystem, document or remote-resource version snapshot; use `memory_only` when
+no material resource is needed. The receiving agent includes its inspected
+manifest when accepting and follows SPM's alignment result. Never clone, pull,
+reset, overwrite or disclose raw diffs automatically. Use
+`spm_agent_workspace_manifest_list` for authorized session or project history.
 
 Surface pending project attention at session start. Display is not acknowledgement or
 resolution; update attention state only after an explicit user instruction.
 
+When an authorized file, specification, repository snapshot, tool result or endpoint
+response materially informs work but is not already represented in captured turns,
+call `spm_agent_resource_handoff` with its stable source reference, kind and a
+redacted body or accurate summary. SPM does not inspect local files, hidden tool
+output or endpoints implicitly. Never hand off secrets or data outside the approved
+sharing boundary. Use `spm_agent_resources_list` when body-free source provenance is
+needed.
+
 Cursor's MCP integration supplies the complete SPM tool surface. Automatic turn
 capture is available when Cursor Agent is launched through the SPM lifecycle
 wrapper; in the IDE, use the MCP tools naturally for durable milestones and state.
+Use `spm_agent_turn_ingest`, `spm_memory_capture_policy_get`,
+`spm_memory_capture_evidence`, `spm_memory_context_compose`,
+`spm_agent_session_receipt_delivery_report` and
+`spm_agent_session_receipt_status` to inspect capture behavior, compose governed
+task context and inspect receipt state when automatic capture is not available.

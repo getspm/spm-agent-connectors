@@ -1,6 +1,6 @@
 {
   "name": "spm-codex",
-  "version": "0.1.0+codex.20260723080002",
+  "version": "0.1.0+codex.20260724154232",
   "description": "Connect Codex to Structured Project Memory through the hosted SPM MCP endpoint.",
   "author": {
     "name": "Manna Digital Consulting, S.L.",
