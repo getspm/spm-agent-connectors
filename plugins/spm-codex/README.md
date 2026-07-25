@@ -72,7 +72,10 @@ capture resumes.
 ## Automatic Lifecycle
 
 - `SessionStart` starts or resumes an SPM agent-memory session and resolves the
-  current workspace against authorized projects.
+  current workspace against authorized projects. The hook also records a
+  body-free workspace manifest: portable Git identity and revision, dirty-state
+  hash and counts, or a content-derived filesystem/document snapshot when Git
+  is not present. Absolute local paths and file bodies are not sent.
 - `UserPromptSubmit` applies the effective selective, complete redacted,
   summaries-only or metadata-only capture policy before LLM-first triage. When
   a capture receipt exists, it gives Codex canonical, verified receipt facts
@@ -85,7 +88,9 @@ capture resumes.
   same project session. It then asks SPM to evaluate the captured prompt and
   captured final response as one completed work unit. This uses the existing
   journal entries as the canonical source and does not create a second RAW
-  transcript. The completed-turn receipt remains available through SPM's
+  transcript. It refreshes the workspace manifest after the work bundle, so
+  subsequent agents can detect stale observations and out-of-band changes.
+  The completed-turn receipt remains available through SPM's
   structured API/MCP status rather than appearing as an extra host-UI
   notification after the answer.
 - The connector can return one capture receipt after each iteration. `compact`
@@ -110,6 +115,10 @@ capture resumes.
 - `spm_memory_context_compose` builds governed task context from canonical
   project memory, with source refs, temporal signals, authority and explicitly
   injected session context.
+- Project source coverage distinguishes metadata-only observations from
+  material evidence. When current files or documents are required, SPM asks
+  Codex for the authorized material source and re-evaluates coverage after the
+  handoff instead of treating a hash or filename as content.
 
 ## Transport Trace (Opt-In)
 

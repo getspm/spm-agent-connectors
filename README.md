@@ -74,7 +74,13 @@ Connector profiles expose the agent-facing SPM surface:
   or credentials;
 - compare body-free workspace manifests before a handoff: Git identity,
   revision and local-state hash; non-Git file or document snapshots; remote
-  version references; or memory-only work.
+  version references; or memory-only work;
+- refresh workspace manifests automatically at session start, before user
+  turns and after completed work when the client supports lifecycle hooks,
+  making stale observations and out-of-band changes visible without uploading
+  local file bodies;
+- distinguish metadata-only source observations from material evidence and
+  request an authorized source handoff when current content is required.
 
 ## Typical Use Cases
 

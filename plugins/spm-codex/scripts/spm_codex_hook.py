@@ -19,6 +19,15 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from spm_codex_workspace import (  # noqa: E402
+    WorkspaceObservationError,
+    observe_workspace,
+)
+
 
 DEFAULT_MCP_URL = "https://getspm.com/v1/mcp"
 TOKEN_ENV = "SPM_CODEX_MCP_TOKEN"
@@ -310,6 +319,31 @@ def _start_or_resume(
     _remember_response_language(event, state, session)
     _write_state(event, state)
     return session, state
+
+
+def _record_workspace_observation(
+    event: dict[str, Any],
+    state: dict[str, Any],
+    *,
+    capture_reason: str,
+) -> dict[str, Any] | None:
+    session_id = str(state.get("spm_session_id") or "").strip()
+    workspace = str(event.get("cwd") or "").strip()
+    if not session_id or not workspace:
+        return None
+    try:
+        payload = observe_workspace(workspace, capture_reason=capture_reason)
+        result = _rpc_call(
+            "spm_agent_workspace_manifest_record",
+            {"session_id": session_id, **payload},
+        )
+    except (SpmHookError, WorkspaceObservationError, OSError) as exc:
+        _log(event, status="workspace_observation_unavailable", detail=str(exc))
+        return None
+    state["workspace_manifest_hash"] = result.get("manifest_hash")
+    state["workspace_observed_at"] = result.get("captured_at")
+    _write_state(event, state)
+    return result
 
 
 def _session_response_language(session: dict[str, Any]) -> str:
@@ -1412,6 +1446,7 @@ def handle(event: dict[str, Any]) -> None:
     state = _read_state(event)
     session, state = _start_or_resume(event, state)
     if event_name == "SessionStart":
+        _record_workspace_observation(event, state, capture_reason="session_start")
         _log(event, status="ready", detail=session.get("resolution_status", "unknown"))
         # A session can carry a proposal created before the latest connector
         # version or before the current task supplied enough evidence. Do not
@@ -1424,6 +1459,7 @@ def handle(event: dict[str, Any]) -> None:
         _hook_output(event_name, context, event=event)
         return
     if event_name == "UserPromptSubmit":
+        _record_workspace_observation(event, state, capture_reason="before_user_turn")
         result = _ingest(event, state, role="user")
         user_text, _ = _turn_text_with_source(event, "user")
         if result and result.get("status") in {"captured", "triaged", "duplicate"} and user_text:
@@ -1533,6 +1569,7 @@ def handle(event: dict[str, Any]) -> None:
                 # Keep the pending source only for a later Stop retry. This never
                 # blocks Codex and is visible in local lifecycle diagnostics.
                 _log(event, status="work_bundle_unavailable", detail=str(exc))
+        _record_workspace_observation(event, state, capture_reason="after_work_bundle")
         current_session = (result or {}).get("session") or session
         _remember_response_language(event, state, current_session)
         _store_iteration_receipt(event, state, role="assistant", result=result)
