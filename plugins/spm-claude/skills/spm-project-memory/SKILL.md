@@ -31,14 +31,18 @@ confirmed, replaced or skipped; an ambiguous match can list candidates. For
 or continue without persistent memory in SPM. Confirm, replace or skip a match only through
 `spm_agent_session_association_decide`. Call `spm_project_bootstrap_preview` only
 after the user chooses a new project. Supply a safe inventory of authorized
-resources and source-grounded evidence from a bounded inspection. When the
+resources and source-grounded evidence from a bounded inspection. Every evidence
+item must include a non-empty `content` summary and every resource item a stable
+`source_ref`, following the exact MCP input schema. When the
 returned evidence assessment requests a specific missing source, inspect only
 that authorized source and call `spm_project_bootstrap_evidence_submit`; never
 crawl the workspace or use an absolute local path as shared project identity.
 If the user then explicitly confirms create,
 link or skip in the agent conversation and the connector has write permission, call
 `spm_project_bootstrap_confirm`; otherwise use the private URL solely for
-authenticated confirmation. Never replace the question with a status note or bare
+authenticated owner/admin confirmation. The hosted connector intentionally omits
+`projects:write`; this browser confirmation is its expected least-privilege flow,
+not a connector permission error. Never replace the question with a status note or bare
 URL, create a project silently or claim persistence before confirmation.
 
 Use `spm_agent_session_receipt_delivery_report` to record body-free connector
