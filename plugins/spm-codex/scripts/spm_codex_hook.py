@@ -574,8 +574,13 @@ def _association_conversation_context(association: dict[str, Any]) -> str:
         "bounded inspection. Follow a specific evidence_assessment.agent_instruction by inspecting "
         "only authorized resources and calling spm_project_bootstrap_evidence_submit. Never crawl "
         "the workspace, expose secrets, or use absolute local paths as shared identity. Use the "
-        "private URL only for authenticated confirmation. Never claim persistent project memory "
-        "before confirmation.\n"
+        "returned confirmation_flow as one continuous interaction: open its URL immediately when "
+        "browser navigation is available, include the same clickable URL as fallback, and let the "
+        "page request sign-in and resume the exact proposal. On the next turn or after the host "
+        "resumes, call confirmation_flow.status_tool. Do not ask the user to tell you when the "
+        "confirmation is complete. Describe this only as reviewing what SPM will save; do not invent "
+        "category summaries such as architecture, tests, deployment or pending gates. Never claim "
+        "persistent project memory before confirmation.\n"
         f"SPM association facts: {json.dumps(decision, sort_keys=True, ensure_ascii=True)}"
     )
 
