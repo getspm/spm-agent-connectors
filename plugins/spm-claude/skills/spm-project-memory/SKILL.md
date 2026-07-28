@@ -29,21 +29,18 @@ user's language and interpret the answer semantically. A likely match can be
 confirmed, replaced or skipped; an ambiguous match can list candidates. For
 `bootstrap_required`, ask whether to create a new project, show existing projects
 or continue without persistent memory in SPM. Confirm, replace or skip a match only through
-`spm_agent_session_association_decide`. Call `spm_project_bootstrap_preview` only
-after the user chooses a new project. Supply a safe inventory of authorized
-resources and source-grounded evidence from a bounded inspection. Every evidence
-item must include a non-empty `content` summary and every resource item a stable
-`source_ref`, following the exact MCP input schema. When the
-returned evidence assessment requests a specific missing source, inspect only
-that authorized source and call `spm_project_bootstrap_evidence_submit`; never
-crawl the workspace or use an absolute local path as shared project identity.
-If the user then explicitly confirms create,
-link or skip in the agent conversation and the connector has write permission, call
-`spm_project_bootstrap_confirm`; otherwise use the private URL solely for
-authenticated owner/admin confirmation. The hosted connector intentionally omits
-`projects:write`; this browser confirmation is its expected least-privilege flow,
-not a connector permission error. Never replace the question with a status note or bare
-URL, create a project silently or claim persistence before confirmation.
+`spm_agent_session_association_decide`. After the user explicitly chooses creation,
+call `spm_project_bootstrap_execute` with that instruction, a safe inventory and
+source-grounded evidence from a bounded inspection. The operation is idempotent
+for the task. If it returns `evidence_required`, inspect only the requested
+authorized source, submit it to the same bootstrap and execute again. Never crawl
+the workspace or use an absolute local path as shared project identity. Continue
+without another question after `created` or `already_completed`. Use the private
+URL only for `review_required` or when the user explicitly asks to review first.
+That optional review-first path uses `spm_project_bootstrap_preview`, submits
+requested bounded evidence through `spm_project_bootstrap_evidence_submit` and
+completes through `spm_project_bootstrap_confirm`.
+Never create project memory without an explicit user instruction.
 
 Use `spm_agent_session_receipt_delivery_report` to record body-free connector
 evidence that the receipt instruction was supplied or completion was observed.

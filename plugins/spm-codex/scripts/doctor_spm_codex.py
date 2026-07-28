@@ -40,6 +40,7 @@ REQUIRED_TOOLS = {
     "spm_cross_project_context_pack",
     "spm_multi_project_context_pack",
     "spm_project_bootstrap_preview",
+    "spm_project_bootstrap_execute",
     "spm_project_bootstrap_evidence_submit",
     "spm_project_bootstrap_status",
     "spm_project_resolve",

@@ -103,6 +103,12 @@ def parse_args() -> argparse.Namespace:
         help="Show no normal receipt, one compact receipt, or full integrity evidence after each iteration.",
     )
     parser.add_argument(
+        "--project-bootstrap-mode",
+        choices=("direct", "review"),
+        default="direct",
+        help="Create explicitly requested project memory directly or review it in a browser.",
+    )
+    parser.add_argument(
         "--project-association-mode",
         choices=("confirm_first", "auto_high_confidence", "manual"),
         default="confirm_first",
@@ -179,6 +185,7 @@ def main() -> None:
                 "attention_limit": args.attention_limit,
                 "memory_receipt_mode": args.memory_receipt_mode,
                 "memory_receipt_mode_explicit": "--memory-receipt-mode" in sys.argv,
+                "project_bootstrap_mode": args.project_bootstrap_mode,
                 "project_association": {
                     "mode": args.project_association_mode,
                     "auto_match_threshold": args.project_auto_match_threshold,

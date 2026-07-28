@@ -28,21 +28,20 @@ When the lifecycle returns a project-association `user_prompt`, ask it naturally
 and map the user's ordinary-language answer to its structured reply options. For
 `bootstrap_required`, ask whether to create a new project, show existing projects
 or continue without persistent memory in SPM. Confirm, replace or skip a match through
-`spm_agent_session_association_decide`. Call `spm_project_bootstrap_preview` only
-after the user chooses a new project. Include a safe authorized-resource
-inventory and source-grounded evidence from a bounded inspection. Every evidence
-item must include a non-empty `content` summary and every resource item a stable
-`source_ref`, following the exact MCP input schema. Follow a
-specific `evidence_assessment.agent_instruction` with
-`spm_project_bootstrap_evidence_submit`; never crawl unrelated resources or use
-machine-local paths as portable project identity. If the user then explicitly confirms create,
-link or skip in the agent conversation and the connector has write permission, call
-`spm_project_bootstrap_confirm`; otherwise use the private URL solely for authenticated
-owner/admin confirmation. The hosted connector intentionally omits `projects:write`;
-this browser confirmation is its expected least-privilege flow, not a connector
-permission error. Do not replace the conversation with a bare URL,
-claim that project memory exists before confirmation or claim persistence during
-SPM unavailable states.
+`spm_agent_session_association_decide`. After the user explicitly chooses creation,
+call `spm_project_bootstrap_execute` with that instruction, a safe authorized-resource
+inventory and source-grounded evidence from a bounded inspection. Repeat the
+idempotent operation to resume the same bootstrap. If it returns
+`evidence_required`, inspect only the requested authorized resources, submit them
+to the same bootstrap and execute again. Never crawl unrelated resources or use
+machine-local paths as portable project identity. Continue after `created` or
+`already_completed`; use the private URL only for `review_required` or explicit
+review-first requests. That optional path uses
+`spm_project_bootstrap_preview`, submits requested bounded evidence through
+`spm_project_bootstrap_evidence_submit` and completes through
+`spm_project_bootstrap_confirm`. Never create project memory without an explicit
+user instruction. If SPM unavailable status is returned, say `SPM unavailable`
+plainly and continue without claiming persistence.
 
 When authorized work must continue in another agent or device, create a
 short-lived one-time handoff with `spm_agent_session_continuation_create`. The

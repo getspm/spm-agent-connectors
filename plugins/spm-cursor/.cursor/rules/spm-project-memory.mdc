@@ -11,17 +11,15 @@ or compose another authorized project unless the user explicitly requests it.
 Start or resume project memory with `spm_agent_session_start` when the runtime
 has not already done so. If SPM returns an association prompt, ask it naturally and
 persist the user's semantic confirm, replace or skip answer with
-`spm_agent_session_association_decide`. For a new project request, call
-`spm_project_bootstrap_preview` first. When its evidence assessment requests a
-bounded inspection, inspect only authorized project-defining resources and submit
-the redacted result with `spm_project_bootstrap_evidence_submit`. Every evidence
-item must include a non-empty `content` summary and every resource item a stable
-`source_ref`, following the exact MCP input schema. Call
-`spm_project_bootstrap_confirm` only after the evidence assessment permits
-confirmation and the user explicitly confirms the action. The hosted connector
-intentionally omits `projects:write`; authenticated owner/admin confirmation in
-the private browser surface is the expected least-privilege flow, not a connector
-permission error.
+`spm_agent_session_association_decide`. When the user explicitly asks to create
+new project memory, call `spm_project_bootstrap_execute` with that instruction,
+a safe inventory and source-grounded evidence from a bounded inspection. Repeat
+the same idempotent operation to resume it. If SPM requests a known evidence
+gap, submit only that authorized source with
+`spm_project_bootstrap_evidence_submit` and execute again. Continue without
+another question after `created` or `already_completed`. Use
+`spm_project_bootstrap_preview` and `spm_project_bootstrap_confirm` only for an
+explicit review-first request or when execution returns `review_required`.
 
 Use SPM context packs rather than copying whole projects between conversations.
 Preserve source project, temporal assessment, context boundary and verification
