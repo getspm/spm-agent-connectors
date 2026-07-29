@@ -583,6 +583,69 @@ def _association_conversation_context(association: dict[str, Any]) -> str:
     )
 
 
+def _ingest_unavailable_context(session: dict[str, Any]) -> str:
+    """Preserve the user workflow when turn capture misses its transport deadline.
+
+    This never resolves a project or invents a candidate. It only carries the
+    already confirmed active project, or the non-semantic actions that remain
+    safe while SPM resolution is temporarily unavailable.
+    """
+
+    if session.get("active_project"):
+        return _combine_context(
+            _project_context(session),
+            (
+                "SPM did not capture the current user turn. Do not claim that this turn was "
+                "persisted. The confirmed project association remains active."
+            ),
+        )
+    association = (
+        session.get("project_association")
+        if isinstance(session.get("project_association"), dict)
+        else {}
+    )
+    allowed_intents = {"create", "list", "skip"}
+    options = [
+        option
+        for option in association.get("reply_options") or []
+        if isinstance(option, dict)
+        and str(option.get("intent") or "").strip() in allowed_intents
+    ]
+    represented = {str(option.get("intent") or "").strip() for option in options}
+    defaults = {
+        "create": {
+            "intent": "create",
+            "tool": "spm_project_bootstrap_execute",
+        },
+        "list": {
+            "intent": "list",
+            "tool": "spm_projects_list",
+        },
+        "skip": {
+            "intent": "skip",
+            "tool": "spm_agent_session_association_decide",
+        },
+    }
+    options.extend(
+        defaults[intent]
+        for intent in ("create", "list", "skip")
+        if intent not in represented
+    )
+    context = _association_conversation_context(
+        {
+            "status": "resolution_temporarily_unavailable",
+            "reply_options": options,
+        }
+    )
+    return _combine_context(
+        context,
+        (
+            "SPM did not complete semantic project resolution or capture the current user turn. "
+            "There is no project candidate to confirm. Do not claim persistence."
+        ),
+    )
+
+
 def _association_prompt_signature(session: dict[str, Any]) -> str:
     association = session.get("project_association") or {}
     proposed = association.get("proposed_project") or {}
@@ -1463,8 +1526,17 @@ def handle(event: dict[str, Any]) -> None:
         return
     if event_name == "UserPromptSubmit":
         _record_workspace_observation(event, state, capture_reason="before_user_turn")
-        result = _ingest(event, state, role="user")
         user_text, _ = _turn_text_with_source(event, "user")
+        try:
+            result = _ingest(event, state, role="user")
+        except SpmHookError as exc:
+            if user_text:
+                _remember_resolution_turn(state, role="user", content=user_text)
+                _write_state(event, state)
+            context = _ingest_unavailable_context(session)
+            _log(event, status="user_turn_capture_unavailable", detail=str(exc))
+            _hook_output(event_name, context, event=event)
+            return
         if result and result.get("status") in {"captured", "triaged", "duplicate"} and user_text:
             _remember_pending_work(event, state, content=user_text)
         if result and result.get("status") in {
@@ -1634,9 +1706,17 @@ def main() -> int:
         # UserPromptSubmit hook is the sole user-visible receipt instruction
         # boundary; Stop remains capture/diagnostics only.
         if event_name in {"SessionStart", "UserPromptSubmit"}:
+            context = (
+                _ingest_unavailable_context({})
+                if event_name == "UserPromptSubmit"
+                else (
+                    "SPM lifecycle capture is unavailable for this turn. Do not claim that "
+                    "project memory was persisted."
+                )
+            )
             _hook_output(
                 event_name,
-                "SPM lifecycle capture is unavailable for this turn. Do not claim that project memory was persisted.",
+                context,
                 event=event,
             )
         return 0
