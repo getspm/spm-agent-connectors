@@ -13,11 +13,12 @@ import json
 import os
 import shlex
 import sys
-import tomllib
 import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Any
+
+import tomllib
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
@@ -27,7 +28,6 @@ from spm_codex_workspace import (  # noqa: E402
     WorkspaceObservationError,
     observe_workspace,
 )
-
 
 DEFAULT_MCP_URL = "https://getspm.com/v1/mcp"
 TOKEN_ENV = "SPM_CODEX_MCP_TOKEN"
@@ -376,7 +376,11 @@ def _cached_project_context(state: dict[str, Any], session: dict[str, Any]) -> s
     cached = str(state.get("cached_project_context") or "").strip()
     if cached and active_id and state.get("cached_project_id") == active_id:
         attention = _attention_context(session.get("attention_briefing"))
-        return _combine_context(cached, attention)
+        return _combine_context(
+            _active_project_contract(session),
+            cached,
+            attention,
+        )
     return _project_context(session)
 
 
@@ -428,6 +432,7 @@ def _prompt_context(session: dict[str, Any]) -> str:
     if status != "provided":
         return ""
     lines = [
+        _active_project_contract(session),
         (
             f"SPM provided rich project context for '{prompt_context.get('project_name') or active.get('name')}' "
             f"({prompt_context.get('project_id') or active.get('id')}). Use this as the project-memory context "
@@ -471,16 +476,27 @@ def _prompt_context(session: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _active_project_contract(session: dict[str, Any]) -> str:
+    """Render the canonical, already-resolved project association for the agent."""
+
+    active = session.get("active_project") or {}
+    if not active:
+        return ""
+    return (
+        "SPM canonical session state: this agent task is already linked to project "
+        f"'{active.get('name')}' ({active.get('id')}). The association is active and confirmed. "
+        "Use this project memory. Do not ask the user to create, list, select, confirm, skip or "
+        "re-associate project memory unless the user explicitly requests a project change or SPM "
+        "later returns an unresolved association."
+    )
+
+
 def _project_context(session: dict[str, Any]) -> str:
     active = session.get("active_project") or {}
     projects = session.get("accessible_projects") or []
     association = session.get("project_association") or {}
     if active:
-        context = _prompt_context(session) or (
-            f"SPM project memory is active for project '{active.get('name')}' "
-            f"({active.get('id')}). Keep ordinary recall and writes in this project. "
-            "List or compose another authorized project only when the user explicitly asks."
-        )
+        context = _prompt_context(session) or _active_project_contract(session)
         default_material_instruction = (
             "If an authorized file, document, tool result, repository snapshot or endpoint response "
             "materially informs the work and is not already represented in project memory, call "
@@ -512,14 +528,20 @@ def _project_context(session: dict[str, Any]) -> str:
         "requires_selection",
         "external_context_only",
     }:
-        return _association_conversation_context(association)
+        return _association_conversation_context(
+            association,
+            session_id=str(session.get("id") or ""),
+        )
     if association.get("status") == "skipped":
         return (
             "The user chose to continue this Codex task without persistent SPM project memory. "
             "Do not claim persistence. The user may explicitly select a project later."
         )
     if session.get("bootstrap"):
-        return _association_conversation_context(association)
+        return _association_conversation_context(
+            association,
+            session_id=str(session.get("id") or ""),
+        )
     names = ", ".join(str(project.get("name")) for project in projects[:12]) or "none"
     return (
         "SPM cannot safely select one project for this task yet. "
@@ -529,7 +551,11 @@ def _project_context(session: dict[str, Any]) -> str:
     )
 
 
-def _association_conversation_context(association: dict[str, Any]) -> str:
+def _association_conversation_context(
+    association: dict[str, Any],
+    *,
+    session_id: str,
+) -> str:
     proposed = association.get("proposed_project")
     candidate = (
         {
@@ -555,6 +581,7 @@ def _association_conversation_context(association: dict[str, Any]) -> str:
             }
         )
     decision = {
+        "session_id": session_id or None,
         "status": str(association.get("status") or "requires_selection"),
         "candidate": candidate,
         "available_actions": actions,
@@ -570,15 +597,25 @@ def _association_conversation_context(association: dict[str, Any]) -> str:
         "its calibrated confidence. Keep asking in later turns until the user confirms, rejects, selects, "
         "creates, or skips. A hook context being emitted is not a user-visible decision. Interpret the "
         "user's answer semantically, never with string matching. If the user explicitly chooses "
-        "create, call spm_project_bootstrap_execute with that instruction, a safe inventory and "
-        "source-grounded evidence from a bounded inspection. This operation is idempotent for the "
+        "create, call spm_project_bootstrap_execute with the session_id from the canonical state, "
+        "that instruction, a safe inventory and "
+        "source-grounded evidence from a bounded inspection. For each authorized source body "
+        "actually read and safe to persist, send redacted content with content_mode=body. Use "
+        "content_mode=summary only when the body is unavailable, disallowed, or intentionally not "
+        "retained. Inventory is discovery metadata, never captured material. This operation is "
+        "idempotent for the "
         "task: repeat it to resume the same bootstrap, never create a second proposal. If it returns "
         "evidence_required, inspect only the requested authorized resources, call "
         "spm_project_bootstrap_evidence_submit on the same bootstrap, then execute again. Never "
         "crawl the workspace, expose secrets, or use absolute local paths as shared identity. "
-        "Created or already_completed means continue without another question. Open the returned "
+        "Read material_coverage before reporting completion: captured_body or uploaded means the "
+        "source material is available, captured_summary means summary-only, and pending requires "
+        "spm_agent_resource_handoff or a private UI upload. Never claim an inventoried or summarized "
+        "file was uploaded. Created or already_completed means continue without another question. "
+        "Open the returned "
         "confirmation_flow only for review_required or when the user explicitly requested review "
-        "before creation. Never claim persistent memory until execution completes.\n"
+        "before creation. Creation and session association are atomic: never claim persistent "
+        "memory unless the returned session has the new project as active_project_id.\n"
         f"SPM association facts: {json.dumps(decision, sort_keys=True, ensure_ascii=True)}"
     )
 
@@ -635,7 +672,8 @@ def _ingest_unavailable_context(session: dict[str, Any]) -> str:
         {
             "status": "resolution_temporarily_unavailable",
             "reply_options": options,
-        }
+        },
+        session_id=str(session.get("id") or ""),
     )
     return _combine_context(
         context,

@@ -7,12 +7,12 @@ context packs and report durable outcomes through the same governed API.
 
 The bundle does not pretend that Cursor IDE exposes lifecycle hooks it does not
 provide. MCP behavior is native; automatic user/assistant turn capture is supplied
-by the optional `scripts/agent-connectors/spm-cursor-agent.py` wrapper.
+by the optional `ops/agent-connectors/spm-cursor-agent.py` wrapper.
 
 Authorize the connector without copying a project UUID first:
 
 ```bash
-python3 scripts/agent-connectors/authorize_spm_agent.py \
+python3 ops/agent-connectors/authorize_spm_agent.py \
   --client-name "Cursor" \
   --write-env ~/.spm/cursor.env
 source ~/.spm/cursor.env
@@ -33,9 +33,12 @@ memory.
 
 When a file, specification, repository snapshot, tool result or endpoint response
 materially informs work, Cursor or its wrapper follows the dynamic session
-source-capture contract and can call `spm_agent_resource_handoff` with a stable
-source reference and an authorized redacted body or summary. SPM checks source
-coverage at work closure, canonically reuses identical evidence and links changed
-stable sources as versions. The connector does not claim access to arbitrary local
-files, hidden tool output or endpoints. The handoff follows the same capture policy,
-journal, temporal triage and governed sharing controls as a normal agent turn.
+source-capture contract and can call `spm_agent_resource_handoff` with a concrete
+source reference and an authorized redacted body or summary. Portable sources also
+include `source_identity`: the governed repository/source scope and repository-
+relative logical path, while revision and machine remain observation metadata. SPM
+checks source coverage at work closure, canonically reuses identical evidence
+without losing observed locations and links changed portable sources across agents
+or machines. The connector does not claim access to arbitrary local files, hidden
+tool output or endpoints. The handoff follows the same capture policy, journal,
+temporal triage and governed sharing controls as a normal agent turn.

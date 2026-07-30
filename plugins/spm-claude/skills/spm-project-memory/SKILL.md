@@ -30,9 +30,11 @@ confirmed, replaced or skipped; an ambiguous match can list candidates. For
 `bootstrap_required`, ask whether to create a new project, show existing projects
 or continue without persistent memory in SPM. Confirm, replace or skip a match only through
 `spm_agent_session_association_decide`. After the user explicitly chooses creation,
-call `spm_project_bootstrap_execute` with that instruction, a safe inventory and
-source-grounded evidence from a bounded inspection. The operation is idempotent
-for the task. If it returns `evidence_required`, inspect only the requested
+call `spm_project_bootstrap_execute` with the current lifecycle `session_id`,
+that instruction, a safe inventory and source-grounded evidence from a bounded
+inspection. Creation and task association are atomic: never omit `session_id` or
+report success unless the returned session has the new project active. The
+operation is idempotent for the task. If it returns `evidence_required`, inspect only the requested
 authorized source, submit it to the same bootstrap and execute again. Never crawl
 the workspace or use an absolute local path as shared project identity. Continue
 without another question after `created` or `already_completed`. Use the private
@@ -70,4 +72,4 @@ Do not store secrets, credentials, raw private tokens or unnecessary personal da
 Use context packs for handoff and preserve project id, source, temporal assessment,
 policy boundary and verification hash.
 
-Follow the dynamic session source-capture contract when an authorized file, specification, repository snapshot, tool result or endpoint response materially informs work. Use `spm_agent_resource_handoff` for a missing source with its stable reference, kind and a redacted body or accurate summary. SPM checks coverage at work closure, reuses byte-identical evidence canonically and versions a changed stable source. It does not gain implicit access to local files, hidden tool output or endpoints. Never hand off secrets or data outside the approved sharing boundary.
+Follow the dynamic session source-capture contract when an authorized file, specification, repository snapshot, tool result or endpoint response materially informs work. Use `spm_agent_resource_handoff` for a missing source with its concrete reference, kind and a redacted body or accurate summary. When possible, include `source_identity` with the governed repository/source scope and repository-relative logical path; keep commit and machine details as revision observations. SPM checks coverage at work closure, reuses byte-identical evidence canonically without losing observed locations and versions a changed portable source even when its local path changes. It does not gain implicit access to local files, hidden tool output or endpoints. Never hand off secrets or data outside the approved sharing boundary.
