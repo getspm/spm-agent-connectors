@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from pathlib import Path
 
@@ -115,7 +116,15 @@ def main() -> int:
     assert server["websiteUrl"] == "https://getspm.com"
     assert server["repository"]["url"] == "https://github.com/getspm/spm-agent-connectors"
     assert server["repository"]["source"] == "github"
-    assert server["version"] == "0.2.6"
+    server_version = server["version"]
+    if not isinstance(server_version, str) or re.fullmatch(r"\d+\.\d+\.\d+", server_version) is None:
+        fail("server.json version must use MAJOR.MINOR.PATCH")
+    expected_release_version = os.environ.get("MCP_RELEASE_VERSION")
+    if expected_release_version and server_version != expected_release_version:
+        fail(
+            "server.json version "
+            f"{server_version!r} does not match release version {expected_release_version!r}"
+        )
     assert "packages" not in server
     assert server["remotes"][0]["type"] == "streamable-http"
     assert server["remotes"][0]["url"] == "https://getspm.com/v1/mcp"
