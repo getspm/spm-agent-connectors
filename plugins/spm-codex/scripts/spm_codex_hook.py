@@ -1016,7 +1016,6 @@ def _prompt_receipt_facts(
         receipt.get("entry_hash") or receipt.get("decision_hash")
     )
     facts = {
-        "turns": 1,
         "journal_outcome": journal_outcome,
         "project_name": receipt.get("project_name"),
         "temporal_layer": receipt.get("temporal_layer"),
@@ -1234,12 +1233,12 @@ def _receipt_summary(mode: str, receipts: list[dict[str, Any]]) -> str | None:
     memory_outcome = _receipt_memory_outcome(persistence, receipts, language)
     rendered_layers = [_localized_temporal_layer(layer, language) for layer in layers]
     if mode != "audit":
-        turn_label = _localized_turn_label(language, len(receipts))
         parts = [
             "SPM",
-            f"{len(receipts)} {turn_label}",
-            journal_outcome,
         ]
+        if len(receipts) > 1:
+            parts.append(f"{len(receipts)} {_localized_turn_label(language, len(receipts))}")
+        parts.append(journal_outcome)
         if memory_outcome:
             parts.append(memory_outcome)
         if project_name:

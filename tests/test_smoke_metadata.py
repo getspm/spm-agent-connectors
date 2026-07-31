@@ -21,6 +21,12 @@ assert FRESH_INSTALL_SPEC is not None and FRESH_INSTALL_SPEC.loader is not None
 FRESH_INSTALL = importlib.util.module_from_spec(FRESH_INSTALL_SPEC)
 FRESH_INSTALL_SPEC.loader.exec_module(FRESH_INSTALL)
 
+HOOK_PATH = ROOT / "plugins" / "spm-codex" / "scripts" / "spm_codex_hook.py"
+HOOK_SPEC = importlib.util.spec_from_file_location("spm_public_connector_hook", HOOK_PATH)
+assert HOOK_SPEC is not None and HOOK_SPEC.loader is not None
+HOOK = importlib.util.module_from_spec(HOOK_SPEC)
+HOOK_SPEC.loader.exec_module(HOOK)
+
 
 class RemoteMetadataContractTests(unittest.TestCase):
     def metadata(self) -> dict[str, object]:
@@ -71,6 +77,27 @@ class RemoteMetadataContractTests(unittest.TestCase):
             ("objects:read", "objects:write", "agent_hardening:write"),
         )
         self.assertEqual(SMOKE.EXPECTED_ACTION_REPORT_STATUS, "valid")
+
+    def test_compact_receipt_only_counts_aggregated_turns(self) -> None:
+        receipt = {
+            "kind": "spm.agent_memory_capture_receipt",
+            "journal_status": "recorded",
+            "persistence_status": "applied",
+            "project_id": "e2de5034-ac68-4251-befa-2d873172120b",
+            "project_name": "SPM Demo - Agent Memory Infrastructure",
+            "temporal_layer": "current",
+            "entry_hash": "39862cbda046abcdef",
+            "display_language": "es",
+            "source_message": "entrada guardada",
+            "memory_message": "memoria del proyecto actualizada",
+        }
+
+        single = HOOK._receipt_summary("compact", [receipt])
+        aggregated = HOOK._receipt_summary("compact", [receipt, receipt])
+
+        self.assertNotIn("turno", single)
+        self.assertIn("2 turnos capturados", aggregated)
+        self.assertNotIn("turns", HOOK._prompt_receipt_facts("compact", receipt))
 
 
 if __name__ == "__main__":
