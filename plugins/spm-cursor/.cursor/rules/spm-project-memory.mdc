@@ -54,10 +54,12 @@ resolution; update attention state only after an explicit user instruction.
 When an authorized file, specification, repository snapshot, tool result or endpoint
 response materially informs work but is not already represented in captured turns,
 call `spm_agent_resource_handoff` with its stable source reference, kind and a
-redacted body or accurate summary. SPM does not inspect local files, hidden tool
-output or endpoints implicitly. Never hand off secrets or data outside the approved
-sharing boundary. Use `spm_agent_resources_list` when body-free source provenance is
-needed.
+redacted body or accurate summary. Include mandatory `source_identity` with the
+governed repository/source scope and repository-relative logical path; keep the
+revision, machine and absolute local locator as observation provenance, never as
+logical identity. SPM does not inspect local files, hidden tool output or endpoints
+implicitly. Never hand off secrets or data outside the approved sharing boundary.
+Use `spm_agent_resources_list` when body-free source provenance is needed.
 
 Cursor's MCP integration supplies the complete SPM tool surface. Automatic turn
 capture is available when Cursor Agent is launched through the SPM lifecycle

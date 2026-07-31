@@ -34,9 +34,10 @@ memory.
 When a file, specification, repository snapshot, tool result or endpoint response
 materially informs work, Cursor or its wrapper follows the dynamic session
 source-capture contract and can call `spm_agent_resource_handoff` with a concrete
-source reference and an authorized redacted body or summary. Portable sources also
-include `source_identity`: the governed repository/source scope and repository-
-relative logical path, while revision and machine remain observation metadata. SPM
+source reference, an authorized redacted body or summary and a mandatory portable
+`source_identity`: the governed repository/source scope and repository-relative
+logical path, while revision and machine remain observation metadata. A local
+absolute path is never the logical identity. SPM
 checks source coverage at work closure, canonically reuses identical evidence
 without losing observed locations and links changed portable sources across agents
 or machines. The connector does not claim access to arbitrary local files, hidden

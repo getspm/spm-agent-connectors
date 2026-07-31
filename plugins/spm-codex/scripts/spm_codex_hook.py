@@ -501,8 +501,10 @@ def _project_context(session: dict[str, Any]) -> str:
             "If an authorized file, document, tool result, repository snapshot or endpoint response "
             "materially informs the work and is not already represented in project memory, call "
             "spm_agent_resource_handoff before the final response with its source reference, kind and "
-            "a redacted body or accurate summary. SPM cannot inspect arbitrary host files, hidden tool "
-            "output or endpoints itself. Do not hand off secrets or data outside the approved sharing scope."
+            "a redacted body or accurate summary. Include a portable source identity: repository identity "
+            "plus repository-relative path, with revision and machine kept as observation data. SPM cannot "
+            "inspect arbitrary host files, hidden tool output or endpoints itself. Do not hand off secrets "
+            "or data outside the approved sharing scope."
         )
         source_contract = session.get("source_capture_contract") or {}
         material_instruction = str(
